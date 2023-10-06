@@ -1,8 +1,49 @@
+import { ValidationError, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { MONGO_CONNECTION, PORT } from './config/config';
+import { FallbackExceptionFilter } from './filters/fallback.filter';
+import { HttpExceptionFilter } from './filters/http.filter';
+import { ValidationException } from './filters/validation.exception';
+import { ValidationFilter } from './filters/validation.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
+
+  app.setGlobalPrefix('api');
+
+  app.enableCors();
+
+  app.use(helmet());
+
+  /* app.use(csurf()); */
+
+  await app.listen(PORT);
+  console.log('Web Server Packuba listening on port: ', PORT);
+  console.log('Web Server Packuba listening on port2: ', PORT);
+  console.log('Database Server connection string: ', MONGO_CONNECTION);
+
+  console.log('Web Server Packuba has been succesfully started');
+
+  app.useGlobalFilters(
+    new FallbackExceptionFilter(),
+    new HttpExceptionFilter(),
+    new ValidationFilter(),
+  );
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      skipMissingProperties: true,
+      exceptionFactory: (errors: ValidationError[]) => {
+        const messages = errors.map(
+          (error) => `${error.property} has wrong value ${error.value},
+                ${Object.values(error.constraints).join(', ')} `,
+        );
+
+        return new ValidationException(messages);
+      },
+    }),
+  );
 }
 bootstrap();
