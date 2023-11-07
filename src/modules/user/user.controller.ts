@@ -22,6 +22,7 @@ export class UserController {
   constructor(private userRepository: UserRepository) {}
 
   @Post('/getList')
+  @UseGuards(AuthenticationGuard)
   @UsePipes(new TransformQuery())
   getList(@Body() query: MongoQuery): any {
     return this.userRepository.getList(query);

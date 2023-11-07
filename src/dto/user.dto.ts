@@ -2,7 +2,6 @@ import {
   IsArray,
   IsBoolean,
   IsEmail,
-  IsMongoId,
   IsPhoneNumber,
   IsString,
   IsUrl,
@@ -18,6 +17,9 @@ export class User extends Document {
 
   @IsString()
   name: string;
+
+  @IsString()
+  lastName: string;
 
   @IsString()
   @IsEmail()
@@ -45,4 +47,16 @@ export class User extends Document {
 
   @IsString()
   theme: string;
+
+  @IsArray()
+  favoritesPlaces: any[];
+
+  @IsArray()
+  lastTravel: any[];
+
+  @IsBoolean()
+  acceptFastTravel: boolean;
+
+  @IsBoolean()
+  acceptScheduleTravel: boolean;
 }

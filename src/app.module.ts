@@ -10,6 +10,15 @@ import { RoleController } from './modules/role/role.controller';
 import { RoleModule } from './modules/role/role.module';
 import { ImageController } from './modules/image/image.controller';
 import { ImageModule } from './modules/image/image.module';
+import { SocketController } from './socket/socket.controller';
+import { MessageController } from './modules/message/message.controller';
+import { SocketModule } from './socket/socket.module';
+import { MessageModule } from './modules/message/message.module';
+import { TravelModule } from './modules/travel/travel.module';
+import { TravelController } from './modules/travel/travel.controller';
+import { AuthModule } from './modules/auth/auth.module';
+import { AuthController } from './modules/auth/auth.controller';
+import { AppGateway } from './app.gateway';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -19,17 +28,28 @@ import { ImageModule } from './modules/image/image.module';
       useCreateIndex: true,
       useFindAndModify: false,
     }),
+    AuthModule,
     UserModule,
     RoleModule,
     ImageModule,
+    SocketModule,
+    MessageModule,
+    TravelModule,
   ],
   controllers: [AppController],
-  providers: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer
       .apply(GetUserMiddleware)
-      .forRoutes(UserController, RoleController, ImageController);
+      .forRoutes(
+        AuthController,
+        UserController,
+        RoleController,
+        ImageController,
+        MessageController,
+        SocketController,
+        TravelController,
+      );
   }
 }

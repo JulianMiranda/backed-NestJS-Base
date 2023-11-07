@@ -4,8 +4,8 @@ import { schemaOptions } from '../utils/index';
 
 export const UserSchema = new mongoose.Schema(
   {
-    firebaseId: String,
     name: { type: String, index: true },
+    lastName: { type: String, index: true },
 
     email: String,
     phone: String,
@@ -13,6 +13,8 @@ export const UserSchema = new mongoose.Schema(
     defaultImage: String,
     image: { type: mongoose.Schema.Types.ObjectId, ref: 'Image' },
     status: { type: Boolean, default: true, index: true },
+    acceptFastTravel: { type: Boolean, default: false, index: true },
+    acceptScheduleTravel: { type: Boolean, default: false, index: true },
     reciveNotifications: { type: Boolean, default: true, index: true },
     notificationTokens: [{ type: String }],
     theme: {
@@ -20,6 +22,31 @@ export const UserSchema = new mongoose.Schema(
       default: THEME.DEFAULT,
       enum: [THEME.DEFAULT, THEME.DARK, THEME.LIGHT],
     },
+
+    favoritesPlaces: [
+      {
+        name: { type: String },
+        place: {
+          from: {
+            name: String,
+            address: String,
+            coordinates: { latitude: Number, longitude: Number },
+          },
+          to: {
+            name: String,
+            address: String,
+            coordinates: { latitude: Number, longitude: Number },
+          },
+        },
+      },
+    ],
+    lastTravel: [
+      {
+        name: String,
+        address: String,
+        coordinates: { latitude: Number, longitude: Number },
+      },
+    ],
   },
   { ...schemaOptions },
 );

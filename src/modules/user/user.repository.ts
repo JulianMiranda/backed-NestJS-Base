@@ -88,12 +88,19 @@ export class UserRepository {
         .findOneAndUpdate({ _id: id }, { ...rest, ...newImage }, { new: true })
         .select({
           name: true,
+          lastName: true,
           phone: true,
           email: true,
           image: true,
           role: true,
           lastNotificationCheck: true,
-          firebaseId: true,
+          notificationTokens: true,
+          theme: true,
+          reciveNotifications: true,
+          favoritesPlaces: true,
+          lastTravel: true,
+          acceptFastTravel: true,
+          acceptScheduleTravel: true,
         })
         .populate([
           {
@@ -105,15 +112,16 @@ export class UserRepository {
 
       const { role, name } = rest;
       if (role) {
-        const { firebaseId, _id } = document;
-        const claims = { role, mongoId: _id }; /* 
+        /*   const { firebaseId, _id } = document;
+        const claims = { role, mongoId: _id };  */
+        /* 
         FirebaseService.setName(firebaseId);
         FirebaseService.setClaims(firebaseId, claims); */
       }
-      if (name) {
-        const { firebaseId } = document; /* 
-        FirebaseService.setName(firebaseId); */
-      }
+      /* if (name) {
+        const { firebaseId } = document;
+        FirebaseService.setName(firebaseId); 
+      }*/
 
       if (!document)
         throw new NotFoundException(

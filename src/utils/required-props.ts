@@ -4,6 +4,8 @@ import {
 } from '@nestjs/common';
 import { ENTITY } from '../enums/entity.enum';
 import { User } from 'src/dto/user.dto';
+import { Message } from 'src/dto/message.dto';
+import { Travel } from 'src/dto/travel.dto';
 
 const prepareProps = (props: string[], data: any) => {
   for (const key of Object.keys(data)) {
@@ -25,6 +27,7 @@ const checkNullOrUndefined = (props: string[], data: any) => {
       throw new BadRequestException(
         `The property \\ ${key} \\ cannot be a empty string`,
       );
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: Unreachable code error
     else if (data[key] === [])
       throw new BadRequestException(
@@ -39,9 +42,23 @@ const checkUserProps = (data: Partial<User>): Partial<User> => {
   checkNullOrUndefined(props, dataCopy);
   return data;
 };
+const checkMessageProps = (data: Partial<Message>): Partial<Message> => {
+  const props = ['de', 'para', 'message'];
+  const dataCopy = prepareProps(props, { ...data });
+  checkNullOrUndefined(props, dataCopy);
+  return data;
+};
+const checkTravelProps = (data: Partial<Travel>): Partial<Travel> => {
+  const props = ['user', 'fromCoordinates', 'toCoordinates'];
+  const dataCopy = prepareProps(props, { ...data });
+  checkNullOrUndefined(props, dataCopy);
+  return data;
+};
 
 export const requiredProps = (route: string, data: any): any => {
   if (route === ENTITY.USERS) return checkUserProps(data);
+  if (route === ENTITY.MESSAGES) return checkMessageProps(data);
+  if (route === ENTITY.TRAVELS) return checkTravelProps(data);
 
   throw new InternalServerErrorException('Invalid Route');
 };
