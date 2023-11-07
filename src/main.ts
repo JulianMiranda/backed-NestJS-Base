@@ -24,6 +24,7 @@ async function bootstrap() {
   console.log('Database Server connection string: ', MONGO_CONNECTION);
 
   console.log('Web Server Packuba has been succesfully started');
+  console.log('Deploy');
 
   app.useGlobalFilters(
     new FallbackExceptionFilter(),
