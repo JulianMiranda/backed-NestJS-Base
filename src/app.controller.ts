@@ -7,6 +7,6 @@ export class AppController {
 
   @Get()
   getHello(): string {
-    return DEFAULT_API_WELCOME_MESSAGE;
+    return process.env.DEFAULT_API_WELCOME_MESSAGE;
   }
 }

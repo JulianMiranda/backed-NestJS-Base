@@ -1,4 +1,4 @@
-import { MAPBOX_API_KEY } from '../config/config';
+/* import { MAPBOX_API_KEY } from '../config/config'; */
 
 const mapboxStaticImage = (coordinates: any) => {
   const { longitude, latitude } = coordinates;
@@ -11,7 +11,7 @@ const mapboxStaticImage = (coordinates: any) => {
   const width = 600;
   const height = 400;
 
-  return `${url}${marker}(${lon},${lat})/${lon},${lat},${zoom}/${width}x${height}?access_token=${MAPBOX_API_KEY}`;
+  return `${url}${marker}(${lon},${lat})/${lon},${lat},${zoom}/${width}x${height}?access_token=${process.env.MAPBOX_API_KEY}`;
 };
 
 export const schemaOptions = {

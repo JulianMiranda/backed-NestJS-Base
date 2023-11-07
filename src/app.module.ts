@@ -1,8 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
-import { AppController } from './app.controller';
-import { MONGO_CONNECTION } from './config/config';
+import { AppController } from './app.controller'; /* 
+import { MONGO_CONNECTION } from './config/config'; */
 import { GetUserMiddleware } from './middlewares/get-user.middleware';
 import { UserController } from './modules/user/user.controller';
 import { UserModule } from './modules/user/user.module';
@@ -18,11 +18,12 @@ import { TravelModule } from './modules/travel/travel.module';
 import { TravelController } from './modules/travel/travel.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { AuthController } from './modules/auth/auth.controller';
-import { AppGateway } from './app.gateway';
+import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
-    MongooseModule.forRoot(MONGO_CONNECTION, {
+    MongooseModule.forRoot(process.env.MONGO_CONNECTION, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       useCreateIndex: true,

@@ -1,8 +1,8 @@
 import { ValidationError, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
-import { AppModule } from './app.module';
-import { MONGO_CONNECTION, PORT } from './config/config';
+import { AppModule } from './app.module'; /* 
+import { MONGO_CONNECTION, PORT } from './config/config'; */
 import { FallbackExceptionFilter } from './filters/fallback.filter';
 import { HttpExceptionFilter } from './filters/http.filter';
 import { ValidationException } from './filters/validation.exception';
@@ -19,9 +19,12 @@ async function bootstrap() {
 
   /* app.use(csurf()); */
 
-  await app.listen(PORT);
-  console.log('Web Server Packuba listening on port: ', PORT);
-  console.log('Database Server connection string: ', MONGO_CONNECTION);
+  await app.listen(process.env.PORT);
+  console.log('Web Server Packuba listening on port: ', process.env.PORT);
+  console.log(
+    'Database Server connection string: ',
+    process.env.MONGO_CONNECTION,
+  );
 
   console.log('Web Server Packuba has been succesfully started');
   console.log('Deploy');
