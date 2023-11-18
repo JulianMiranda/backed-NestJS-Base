@@ -1,4 +1,5 @@
 import {
+  IsDate,
   IsLatLong,
   IsMongoId,
   IsNumber,
@@ -10,6 +11,12 @@ import { Document } from 'mongoose';
 export class Travel extends Document {
   @IsString()
   state: string;
+
+  @IsString()
+  type: string;
+
+  @IsDate()
+  date: Date;
 
   @IsMongoId()
   @IsObject()

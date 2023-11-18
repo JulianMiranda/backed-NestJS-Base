@@ -47,11 +47,11 @@ export class GetUserMiddleware implements NestMiddleware {
     try {
       if (token.length === 9) {
         userInfo = {
-          name: 'Julian',
-          lastName: 'Cliente',
+          name: 'Pedro',
+          lastName: 'Chofer',
           picture: '',
-          role: 'CUN',
-          email: 'cliente@gmail.com',
+          role: 'JUN',
+          email: 'pedrochofer@gmail.com',
           phone_number: '+5355657180',
           mongoId: '',
         };

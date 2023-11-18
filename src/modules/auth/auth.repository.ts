@@ -30,6 +30,9 @@ export class AuthRepository {
             notificationTokens: true,
             acceptFastTravel: true,
             acceptScheduleTravel: true,
+            location: true,
+            ratingStars: true,
+            ratingAvg: true,
           })
           .populate([
             {
@@ -73,6 +76,9 @@ export class AuthRepository {
           notificationTokens: true,
           acceptFastTravel: true,
           acceptScheduleTravel: true,
+          location: true,
+          ratingStars: true,
+          ratingAvg: true,
         })
         .populate([
           {

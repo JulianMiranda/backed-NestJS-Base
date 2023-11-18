@@ -65,7 +65,38 @@ export class UserRepository {
     image: Partial<Image>,
   ): Promise<User> {
     try {
-      const { notificationTokens, ...rest } = data;
+      const { notificationTokens, lastTravel, coordinates, rating, ...rest } =
+        data;
+
+      if (coordinates) {
+        const location = { type: 'Point', coordinates };
+        await this.userDb.findOneAndUpdate({ _id: id }, { location });
+      }
+
+      if (rating) {
+        const { ratingStars } = await this.userDb
+          .findOne({ _id: id }, { ratingStars: true })
+          .lean();
+
+        if (rating === 1) ratingStars.one++;
+        else if (rating === 2) ratingStars.two++;
+        else if (rating === 3) ratingStars.three++;
+        else if (rating === 4) ratingStars.four++;
+        else if (rating === 5) ratingStars.five++;
+
+        const ratingKeys = Object.values(ratingStars);
+
+        const sum = ratingKeys.reduce((a: number, b: number) => a + b);
+        const totalSum = ratingKeys.reduce(
+          (a: number, b: number, i: number) => a + b * (i + 1),
+        );
+        const ratingAvg = (Number(totalSum) / Number(sum)).toFixed(2);
+
+        await this.userDb.findOneAndUpdate(
+          { _id: id },
+          { ratingStars, ratingAvg: Number(ratingAvg) },
+        );
+      }
 
       if (notificationTokens) {
         await this.userDb.findOneAndUpdate(
@@ -74,6 +105,20 @@ export class UserRepository {
           { $addToSet: { notificationTokens } },
         );
       }
+      if (lastTravel) {
+        await this.userDb.findOneAndUpdate(
+          { _id: id },
+          { $addToSet: { lastTravel } },
+        );
+        /* const user =  await this.userDb.findOne({ _id: id})
+       if(user.lastTravel.length < 2){
+       const exist = user.lastTravel.filter(lT => JSON.stringify(lT) === JSON.stringify(lastTravel))
+       if(exist.length > 0) {return}
+      } else {
+        
+      } */
+      }
+      console.log('Data', data);
 
       let newImage = {};
       if (image) {
@@ -101,6 +146,9 @@ export class UserRepository {
           lastTravel: true,
           acceptFastTravel: true,
           acceptScheduleTravel: true,
+          location: true,
+          ratingStars: true,
+          ratingAvg: true,
         })
         .populate([
           {

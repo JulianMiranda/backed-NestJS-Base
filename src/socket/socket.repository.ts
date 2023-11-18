@@ -7,6 +7,8 @@ import { User } from 'src/dto/user.dto';
 import { ENTITY } from 'src/enums/entity.enum';
 import { users } from './users-aggregation';
 import { Travel } from 'src/dto/travel.dto';
+import { junsNear } from './junsNear-aggregation';
+import { GeoUtils } from 'src/utils/geoDistance';
 
 @Injectable()
 export class SocketRepository {
@@ -61,12 +63,16 @@ export class SocketRepository {
 
   async newTravel(travel: Partial<Travel>): Promise<any> {
     try {
-      /*   console.log('Travel', travel); */
-      const JUNs = await this.userDb.find({
-        role: 'JUN',
-        acceptFastTravel: true,
-      });
+      console.log('Travel', travel);
+      const distance = 8000;
+      const coordinates = [
+        travel.fromLocation.travelPoint.coordinates.latitude,
+        travel.fromLocation.travelPoint.coordinates.longitude,
+      ];
+      console.log('coordinates', coordinates);
+      const JUNs = await this.userDb.aggregate(junsNear(distance, coordinates));
       for (const jun of JUNs) {
+        console.log('JUNs', jun);
         console.log('Enviar a JUNS new-travel', jun._id);
         this.socket.to(jun._id.toString()).emit('new-travel', travel.id);
       }

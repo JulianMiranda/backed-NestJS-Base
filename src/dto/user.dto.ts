@@ -2,6 +2,9 @@ import {
   IsArray,
   IsBoolean,
   IsEmail,
+  IsLatLong,
+  IsNumber,
+  IsObject,
   IsPhoneNumber,
   IsString,
   IsUrl,
@@ -59,4 +62,25 @@ export class User extends Document {
 
   @IsBoolean()
   acceptScheduleTravel: boolean;
+
+  @IsLatLong()
+  coordinates: any;
+
+  @IsObject()
+  location: any;
+
+  @IsNumber()
+  rating: number;
+
+  @IsNumber()
+  ratingAvg: number;
+
+  @IsObject()
+  ratingStars: any;
+
+  @IsString()
+  idNumber: string;
+
+  @IsString()
+  driveLicense: string;
 }

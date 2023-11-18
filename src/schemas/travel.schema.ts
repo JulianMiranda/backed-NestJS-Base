@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import { TRAVELSTATE } from 'src/enums/travelstate.enum';
 import { schemaOptions } from '../utils/index';
+import { TRAVELTYPE } from 'src/enums/traveltype.enum';
 
 const TravelSchema = new mongoose.Schema(
   {
@@ -14,6 +15,17 @@ const TravelSchema = new mongoose.Schema(
       ],
       index: true,
       default: TRAVELSTATE.ORDER,
+    },
+    type: {
+      type: String,
+      enum: [
+        TRAVELTYPE.FAST,
+        TRAVELTYPE.SCHEDULE,
+        TRAVELTYPE.FASTSHARED,
+        TRAVELTYPE.SCHEDULESHARED,
+      ],
+      index: true,
+      default: TRAVELTYPE.FAST,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -29,6 +41,7 @@ const TravelSchema = new mongoose.Schema(
     cost: { type: Number, set: setPrice, default: 0, index: true },
 
     currency: { type: String, default: 'USD' },
+    date: { type: Date, default: new Date() },
     status: { type: Boolean, default: true, index: true },
     fromLocation: {
       type: { type: String },

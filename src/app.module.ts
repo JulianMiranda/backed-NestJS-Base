@@ -19,6 +19,11 @@ import { TravelController } from './modules/travel/travel.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { AuthController } from './modules/auth/auth.controller';
 import { ConfigModule } from '@nestjs/config';
+import { QueriesModule } from './modules/queries/queries.module';
+import { QueriesController } from './modules/queries/queries.controller';
+import { GeoUtils } from './utils/geoDistance';
+import { CarModule } from './modules/car/car.module';
+import { CarsController } from './modules/car/car.controller';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -36,8 +41,11 @@ import { ConfigModule } from '@nestjs/config';
     SocketModule,
     MessageModule,
     TravelModule,
+    QueriesModule,
+    CarModule,
   ],
   controllers: [AppController],
+  providers: [GeoUtils],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
@@ -51,6 +59,8 @@ export class AppModule implements NestModule {
         MessageController,
         SocketController,
         TravelController,
+        QueriesController,
+        CarsController,
       );
   }
 }

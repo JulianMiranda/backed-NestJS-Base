@@ -12,6 +12,7 @@ import { ENTITY } from '../../enums/entity.enum'; /*
 import { NOTIFICATION } from '../../enums/notification.enum';
 import { NotificationsRepository } from '../notifications/notifications.repository'; */
 import { SocketRepository } from 'src/socket/socket.repository';
+import { GeoUtils } from 'src/utils/geoDistance';
 
 @Injectable()
 export class TravelRepository {
@@ -77,6 +78,17 @@ export class TravelRepository {
         type: 'Point',
         travelPoint: data.toCoordinates,
       };
+      console.log(data);
+      const cost = GeoUtils.calculateCostForDistance(
+        GeoUtils.calculateHaversineDistance(
+          data.fromCoordinates.coordinates.latitude,
+          data.fromCoordinates.coordinates.longitude,
+          data.toCoordinates.coordinates.latitude,
+          data.toCoordinates.coordinates.longitude,
+        ),
+      );
+      data.cost = cost;
+      console.log('Costo', cost);
       const newTravel = new this.travelDb(data);
       const document = await newTravel.save();
       const travel = await this.travelDb.findOneAndUpdate(

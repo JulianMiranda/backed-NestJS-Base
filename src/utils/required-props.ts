@@ -6,6 +6,7 @@ import { ENTITY } from '../enums/entity.enum';
 import { User } from 'src/dto/user.dto';
 import { Message } from 'src/dto/message.dto';
 import { Travel } from 'src/dto/travel.dto';
+import { Car } from 'src/dto/car.dto';
 
 const prepareProps = (props: string[], data: any) => {
   for (const key of Object.keys(data)) {
@@ -54,11 +55,29 @@ const checkTravelProps = (data: Partial<Travel>): Partial<Travel> => {
   checkNullOrUndefined(props, dataCopy);
   return data;
 };
+const checkCarProps = (data: Partial<Car>): Partial<Car> => {
+  const props = [
+    'carPlate',
+    'image',
+    'carBrand',
+    'carModel',
+    'carYear',
+    'carType',
+    'color',
+    'vin',
+    'haveAirConditioning',
+    'passengers',
+  ];
+  const dataCopy = prepareProps(props, { ...data });
+  checkNullOrUndefined(props, dataCopy);
+  return data;
+};
 
 export const requiredProps = (route: string, data: any): any => {
   if (route === ENTITY.USERS) return checkUserProps(data);
   if (route === ENTITY.MESSAGES) return checkMessageProps(data);
   if (route === ENTITY.TRAVELS) return checkTravelProps(data);
+  if (route === ENTITY.CARS) return checkCarProps(data);
 
   throw new InternalServerErrorException('Invalid Route');
 };

@@ -23,6 +23,14 @@ export const schemaOptions = {
       delete ret.__v;
 
       if (ret.textSearch) delete ret.textSearch;
+      if (ret.location) {
+        ret.coordinates = ret.location.coordinates;
+        ret.mapImage = mapboxStaticImage({
+          latitude: ret.location.coordinates[0],
+          longitude: ret.location.coordinates[1],
+        });
+        delete ret.location;
+      }
       if (ret.fromLocation) {
         ret.coordinates = ret.fromLocation.travelPoint.coordinates;
         ret.mapImageFrom = mapboxStaticImage(
