@@ -61,21 +61,12 @@ export class SocketRepository {
     }
   }
 
-  async newTravel(travel: Partial<Travel>): Promise<any> {
+  async newTravel({ travelId, userId }): Promise<any> {
     try {
-      console.log('Travel', travel);
-      const distance = 8000;
-      const coordinates = [
-        travel.fromLocation.travelPoint.coordinates.latitude,
-        travel.fromLocation.travelPoint.coordinates.longitude,
-      ];
-      console.log('coordinates', coordinates);
-      const JUNs = await this.userDb.aggregate(junsNear(distance, coordinates));
-      for (const jun of JUNs) {
-        console.log('JUNs', jun);
-        console.log('Enviar a JUNS new-travel', jun._id);
-        this.socket.to(jun._id.toString()).emit('new-travel', travel.id);
-      }
+      console.log('TravelId', travelId);
+      console.log('userId', userId);
+
+      this.socket.to(userId).emit('new-travel', travelId);
     } catch (e) {
       throw new InternalServerErrorException(
         'filter newTravel Database error',

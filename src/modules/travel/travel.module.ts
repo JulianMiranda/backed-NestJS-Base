@@ -5,6 +5,7 @@ import TravelSchema from '../../schemas/travel.schema';
 import { TravelController } from './travel.controller';
 import { TravelRepository } from './travel.repository';
 import { SocketModule } from 'src/socket/socket.module';
+import UserSchema from 'src/schemas/user.schema';
 
 @Module({
   imports: [
@@ -16,6 +17,10 @@ import { SocketModule } from 'src/socket/socket.module';
       {
         name: 'Message',
         schema: MessageSchema,
+      },
+      {
+        name: 'User',
+        schema: UserSchema,
       },
     ]),
     /* NotificationsModule, */

@@ -15,4 +15,9 @@ export class QueriesController {
   distanceFromTo(@Body() data: any): Promise<any> {
     return this.queriesRepository.distanceFromTo(data);
   }
+
+  @Post('/test')
+  test(@Body() data: any): Promise<any> {
+    return this.queriesRepository.test(data);
+  }
 }

@@ -13,6 +13,12 @@ import { NOTIFICATION } from '../../enums/notification.enum';
 import { NotificationsRepository } from '../notifications/notifications.repository'; */
 import { SocketRepository } from 'src/socket/socket.repository';
 import { GeoUtils } from 'src/utils/geoDistance';
+import {
+  findTravelsFast,
+  findTravelsFastShared,
+  findTravelsSchedule,
+  findTravelsScheduleShared,
+} from './find-travels-helper';
 
 @Injectable()
 export class TravelRepository {
@@ -21,6 +27,7 @@ export class TravelRepository {
   constructor(
     @InjectModel('Travel') private travelDb: Model<Travel>,
     @InjectModel('Message') private messageDb: Model<Message>,
+    @InjectModel('User') private userDb: Model<Message>,
     private socketRepository: SocketRepository /* 
     private notificationsRepository: NotificationsRepository, */,
   ) {}
@@ -67,35 +74,36 @@ export class TravelRepository {
 
   async create(data: any): Promise<any> {
     try {
-      console.log('Crearing Travel', data);
+      /* console.log('Crearing Travel', data); */
       data.fromLocation = {
         type: 'Point',
         travelPoint: data.fromCoordinates,
       };
-      console.log('fromLocation', data.fromLocation);
+      /* console.log('fromLocation', data.fromLocation); */
 
       data.toLocation = {
         type: 'Point',
         travelPoint: data.toCoordinates,
       };
-      console.log(data);
-      const cost = GeoUtils.calculateCostForDistance(
+      /*    console.log(data); */
+      /*  const cost = GeoUtils.calculateCostForDistance(
         GeoUtils.calculateHaversineDistance(
           data.fromCoordinates.coordinates.latitude,
           data.fromCoordinates.coordinates.longitude,
           data.toCoordinates.coordinates.latitude,
           data.toCoordinates.coordinates.longitude,
         ),
-      );
-      data.cost = cost;
-      console.log('Costo', cost);
+      ); */
+      /* data.cost = cost; */
+      /*   console.log('Costo', cost); */
       const newTravel = new this.travelDb(data);
       const document = await newTravel.save();
       const travel = await this.travelDb.findOneAndUpdate(
         { _id: document._id },
         { new: true },
       );
-      this.socketRepository.newTravel(travel);
+      this.searchDrivers(travel);
+
       /*  this.notificationsRepository.createTravelNotification(
           travel._id,
           NOTIFICATION.OPPORTUNITY,
@@ -159,5 +167,28 @@ export class TravelRepository {
       if (e.status === 404) throw e;
       throw new InternalServerErrorException('deleteTravel Database error', e);
     }
+  }
+
+  async searchDrivers(travel: Travel) {
+    console.log('Travel', travel);
+
+    switch (travel.type) {
+      case 'fast':
+        findTravelsFast(travel, this.socketRepository, this.userDb);
+        break;
+      case 'fast':
+        findTravelsFastShared();
+        break;
+      case 'schedule':
+        findTravelsSchedule();
+        break;
+      case 'fast':
+        findTravelsScheduleShared();
+        break;
+      default:
+        break;
+    }
+
+    /*  this.socketRepository.newTravel(travel); */
   }
 }

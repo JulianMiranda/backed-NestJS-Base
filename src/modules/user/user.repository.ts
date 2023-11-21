@@ -65,8 +65,13 @@ export class UserRepository {
     image: Partial<Image>,
   ): Promise<User> {
     try {
-      const { notificationTokens, lastTravel, coordinates, rating, ...rest } =
-        data;
+      const {
+        notificationTokens,
+        lastTravelUpdate,
+        coordinates,
+        rating,
+        ...rest
+      } = data;
 
       if (coordinates) {
         const location = { type: 'Point', coordinates };
@@ -101,15 +106,38 @@ export class UserRepository {
       if (notificationTokens) {
         await this.userDb.findOneAndUpdate(
           { _id: id },
-          // @ts-ignore: Unreachable code error
+          // @ts-expect-error: Unreachable code error
           { $addToSet: { notificationTokens } },
         );
       }
-      if (lastTravel) {
-        await this.userDb.findOneAndUpdate(
+      if (lastTravelUpdate) {
+        const user = await this.userDb.findOne({ _id: id });
+
+        const indiceFavoritoExistente = user.lastTravel.findIndex(
+          (lastTravelUser) =>
+            lastTravelUser.name === lastTravelUpdate.name &&
+            lastTravelUser.address === lastTravelUpdate.address,
+        );
+        if (indiceFavoritoExistente !== -1) {
+          // Si ya existe, moverlo al principio del array
+          user.lastTravel.unshift(
+            user.lastTravel.splice(indiceFavoritoExistente, 1)[0],
+          );
+        } else {
+          // Si no existe, agregarlo al principio y asegurarse de que la longitud del array sea 2 como máximo
+          user.lastTravel.unshift(lastTravelUpdate);
+          user.lastTravel = user.lastTravel.slice(0, 2);
+        }
+        await this.userDb.updateOne(
+          { _id: id },
+          { $set: { lastTravel: user.lastTravel } },
+        );
+
+        /*   console.log('lastTravel: ' + JSON.stringify(lastTravel)); */
+        /*  await this.userDb.findOneAndUpdate(
           { _id: id },
           { $addToSet: { lastTravel } },
-        );
+        ); */
         /* const user =  await this.userDb.findOne({ _id: id})
        if(user.lastTravel.length < 2){
        const exist = user.lastTravel.filter(lT => JSON.stringify(lT) === JSON.stringify(lastTravel))
@@ -118,8 +146,6 @@ export class UserRepository {
         
       } */
       }
-      console.log('Data', data);
-
       let newImage = {};
       if (image) {
         await this.imageRepository.deleteImagesByTypeAndId(this.type, id);
@@ -158,7 +184,7 @@ export class UserRepository {
           },
         ]);
 
-      const { role, name } = rest;
+      const { role } = rest;
       if (role) {
         /*   const { firebaseId, _id } = document;
         const claims = { role, mongoId: _id };  */

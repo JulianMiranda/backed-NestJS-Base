@@ -55,7 +55,10 @@ export class User extends Document {
   favoritesPlaces: any[];
 
   @IsArray()
-  lastTravel: any[];
+  lastTravel: LastTravelUpdateDto[];
+
+  @IsObject()
+  lastTravelUpdate: LastTravelUpdateDto;
 
   @IsBoolean()
   acceptFastTravel: boolean;
@@ -83,4 +86,21 @@ export class User extends Document {
 
   @IsString()
   driveLicense: string;
+}
+class CoordinatesDto {
+  @IsNumber()
+  latitud: number;
+
+  @IsNumber()
+  longitud: number;
+}
+export class LastTravelUpdateDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  address: string;
+
+  @IsObject()
+  coordinates: CoordinatesDto;
 }

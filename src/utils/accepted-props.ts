@@ -28,7 +28,7 @@ const checkUsersProps = (data: Partial<User>): Partial<User> => {
     'theme',
     'reciveNotifications',
     'favoritesPlaces',
-    'lastTravel',
+    'lastTravelUpdate',
     'acceptFastTravel',
     'acceptScheduleTravel',
     'coordinates',
