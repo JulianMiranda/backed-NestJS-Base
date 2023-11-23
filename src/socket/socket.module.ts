@@ -5,6 +5,7 @@ import UserSchema from 'src/schemas/user.schema';
 import { SocketController } from './socket.controller';
 import { SocketRepository } from './socket.repository';
 import { MessageSchema } from 'src/schemas/message.schema';
+import TravelSchema from 'src/schemas/travel.schema';
 
 @Module({
   imports: [
@@ -16,6 +17,10 @@ import { MessageSchema } from 'src/schemas/message.schema';
       {
         name: 'Message',
         schema: MessageSchema,
+      },
+      {
+        name: 'Travel',
+        schema: TravelSchema,
       },
     ]),
   ],

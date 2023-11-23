@@ -50,7 +50,7 @@ const checkMessageProps = (data: Partial<Message>): Partial<Message> => {
   return data;
 };
 const checkTravelProps = (data: Partial<Travel>): Partial<Travel> => {
-  const props = ['user', 'fromCoordinates', 'toCoordinates'];
+  const props = ['user', 'fromCoordinates', 'toCoordinates', 'cost', 'type'];
   const dataCopy = prepareProps(props, { ...data });
   checkNullOrUndefined(props, dataCopy);
   return data;

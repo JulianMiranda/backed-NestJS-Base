@@ -12,13 +12,15 @@ import { ENTITY } from '../../enums/entity.enum'; /*
 import { NOTIFICATION } from '../../enums/notification.enum';
 import { NotificationsRepository } from '../notifications/notifications.repository'; */
 import { SocketRepository } from 'src/socket/socket.repository';
-import { GeoUtils } from 'src/utils/geoDistance';
 import {
   findTravelsFast,
   findTravelsFastShared,
   findTravelsSchedule,
   findTravelsScheduleShared,
 } from './find-travels-helper';
+import { User } from 'src/dto/user.dto';
+import { proponerViajeConLogicaTiempo } from './proponerViajes';
+import { Server, Socket } from 'socket.io';
 
 @Injectable()
 export class TravelRepository {
@@ -27,10 +29,12 @@ export class TravelRepository {
   constructor(
     @InjectModel('Travel') private travelDb: Model<Travel>,
     @InjectModel('Message') private messageDb: Model<Message>,
-    @InjectModel('User') private userDb: Model<Message>,
+    @InjectModel('User') private userDb: Model<User>,
     private socketRepository: SocketRepository /* 
     private notificationsRepository: NotificationsRepository, */,
   ) {}
+
+  public socket: Server;
 
   async getList(query: MongoQuery): Promise<any> {
     try {
@@ -74,35 +78,29 @@ export class TravelRepository {
 
   async create(data: any): Promise<any> {
     try {
-      /* console.log('Crearing Travel', data); */
       data.fromLocation = {
         type: 'Point',
         travelPoint: data.fromCoordinates,
       };
-      /* console.log('fromLocation', data.fromLocation); */
 
       data.toLocation = {
         type: 'Point',
         travelPoint: data.toCoordinates,
       };
-      /*    console.log(data); */
-      /*  const cost = GeoUtils.calculateCostForDistance(
-        GeoUtils.calculateHaversineDistance(
-          data.fromCoordinates.coordinates.latitude,
-          data.fromCoordinates.coordinates.longitude,
-          data.toCoordinates.coordinates.latitude,
-          data.toCoordinates.coordinates.longitude,
-        ),
-      ); */
-      /* data.cost = cost; */
-      /*   console.log('Costo', cost); */
       const newTravel = new this.travelDb(data);
       const document = await newTravel.save();
-      const travel = await this.travelDb.findOneAndUpdate(
+      /*   const travel = await this.travelDb.findOneAndUpdate(
         { _id: document._id },
         { new: true },
+      ); */
+      const a = await proponerViajeConLogicaTiempo(
+        document,
+        this.socketRepository,
+        this.userDb,
       );
-      this.searchDrivers(travel);
+      console.log('A', a);
+
+      /*  this.searchDrivers(travel); */
 
       /*  this.notificationsRepository.createTravelNotification(
           travel._id,
@@ -110,18 +108,45 @@ export class TravelRepository {
           data.user,
           data.owner,
         ); */
-      return travel.id;
+      return document;
     } catch (e) {
       throw new InternalServerErrorException('createTravel Database error', e);
     }
   }
+  async testFindDrivers(data: any, id: string): Promise<any> {
+    try {
+      data.fromLocation = {
+        type: 'Point',
+        travelPoint: data.fromCoordinates,
+      };
 
+      data.toLocation = {
+        type: 'Point',
+        travelPoint: data.toCoordinates,
+      };
+      console.log('testFindDrivers');
+      const document = await this.travelDb.findOne({ _id: id });
+
+      await proponerViajeConLogicaTiempo(
+        document,
+        this.socketRepository,
+        this.userDb,
+      );
+      return document;
+    } catch (e) {
+      throw new InternalServerErrorException(
+        'testFindDrivers Database error',
+        e,
+      );
+    }
+  }
   async update(id: string, data: Partial<Travel>): Promise<boolean> {
     try {
       const { fromCoordinates, toCoordinates } = data;
       if (fromCoordinates)
-        data.fromLocation = { type: 'Point', fromCoordinates };
-      if (toCoordinates) data.toLocation = { type: 'Point', toCoordinates };
+        data.fromLocation = { type: 'Point', travelPoint: fromCoordinates };
+      if (toCoordinates)
+        data.toLocation = { type: 'Point', travelPoint: toCoordinates };
 
       const document = await this.travelDb
         .findOneAndUpdate({ _id: id }, data, { new: true })
@@ -188,7 +213,42 @@ export class TravelRepository {
       default:
         break;
     }
-
-    /*  this.socketRepository.newTravel(travel); */
   }
 }
+/* private async proponerViajeConLogicaTiempo(viaje: Travel): Promise<void> {
+  console.log('proponerViajeConLogicaTiempo');
+
+  const origen = viaje.fromLocation.travelPoint.coordinates;  */ // Supongamos que origen es un objeto con las coordenadas
+/*   const radioInicialBusqueda = 1.0; */ // Radio de búsqueda inicial en kilómetros
+/* const tiempoEsperaInicial = 3000;  */ // Tiempo de espera inicial en milisegundos (3 segundos)
+/* const tiempoEsperaAdicional = 60000;  */ // Tiempo de espera adicional después de 1 minuto en milisegundos (60 segundos)
+
+// Propone el viaje a choferes en un radio de búsqueda inicial
+/*  this.logger.log(
+    'Propone el viaje a choferes en un radio de búsqueda inicial',
+  ); */
+/*  await this.proponerViajeAChoferes(
+    origen,
+    radioInicialBusqueda,
+    tiempoEsperaInicial,
+    viaje,
+  ); */
+
+// Después de 1 minuto, amplía el radio de búsqueda y vuelve a proponer el viaje
+/*  setTimeout(async () => {
+    await this.proponerViajeAChoferes(
+      origen,
+      radioInicialBusqueda * 2,
+      tiempoEsperaInicial,
+      viaje,
+    ); */
+
+// Si después de un tiempo adicional no hay respuesta, puedes realizar acciones adicionales
+/* setTimeout(() => {
+      console.log(
+        'Ningún chofer ha aceptado el viaje después del tiempo adicional.',
+      ); */
+// Puedes implementar lógica adicional aquí, como buscar choferes en una ubicación más amplia, etc.
+/*  }, tiempoEsperaAdicional);
+  }, tiempoEsperaAdicional);
+} */

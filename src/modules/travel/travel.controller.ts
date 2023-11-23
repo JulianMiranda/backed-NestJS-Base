@@ -39,7 +39,6 @@ export class TravelController {
   @Post('/create')
   @UsePipes(new RequiredProps(ENTITY.TRAVELS))
   create(@Body() data: Travel, @Req() req: any): Promise<any> {
-    console.log('user', req.user);
     const user = req.user.id;
     return this.travelRepository.create({ ...data, user });
   }
@@ -56,5 +55,17 @@ export class TravelController {
   @Delete('/delete/:id')
   delete(@Param('id') id: string): Promise<boolean> {
     return this.travelRepository.delete(id);
+  }
+
+  @UseGuards(AuthenticationGuard)
+  @Post('/testFindDrivers/:id')
+  @UsePipes(new RequiredProps(ENTITY.TRAVELS))
+  testFindDrivers(
+    @Body() data: Travel,
+    @Req() req: any,
+    @Param('id') id: string,
+  ): Promise<any> {
+    const user = req.user.id;
+    return this.travelRepository.testFindDrivers({ ...data, user }, id);
   }
 }

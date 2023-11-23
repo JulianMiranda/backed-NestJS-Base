@@ -1,12 +1,36 @@
 import {
   IsDate,
-  IsLatLong,
   IsMongoId,
   IsNumber,
   IsObject,
   IsString,
 } from 'class-validator';
 import { Document } from 'mongoose';
+
+export class Coordinates {
+  @IsNumber()
+  latitude: number;
+
+  @IsNumber()
+  longitude: number;
+}
+export class TravelPoint {
+  @IsString()
+  name: string;
+
+  @IsString()
+  address: string;
+
+  @IsObject()
+  coordinates: Coordinates;
+}
+export class TravelLocation {
+  @IsString()
+  type: string;
+
+  @IsObject()
+  travelPoint: TravelPoint;
+}
 
 export class Travel extends Document {
   @IsString()
@@ -32,15 +56,15 @@ export class Travel extends Document {
   @IsString()
   currency: string;
 
-  @IsLatLong()
-  fromCoordinates: any;
+  @IsObject()
+  fromCoordinates: TravelPoint;
 
   @IsObject()
-  fromLocation: any;
-
-  @IsLatLong()
-  toCoordinates: any;
+  fromLocation: TravelLocation;
 
   @IsObject()
-  toLocation: any;
+  toCoordinates: TravelPoint;
+
+  @IsObject()
+  toLocation: TravelLocation;
 }

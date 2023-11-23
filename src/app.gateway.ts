@@ -1,7 +1,10 @@
 import { Logger } from '@nestjs/common';
 import {
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -57,10 +60,31 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log('Client disconnected');
   }
 
-  /*  async newTravel() {
-    console.log('Hacer new travel');
-    this.wss.emit('new-travel');
+  @SubscribeMessage('accept-travel')
+  async handleMessage(
+    @MessageBody() message: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log('message: ' + message);
+    console.log('client: ' + client);
+    const token = client.handshake.headers['x-token'];
+    console.log('token: ' + token);
 
-    this.logger.log('new-travel');
-  } */
+    if (!token) {
+      return client.disconnect();
+    }
+    if (!message) {
+      this.logger.log('Message null, necesary for travel');
+      return;
+    }
+    const { status, userId } = await this.socketRepository.getUserToken({
+      token,
+    });
+    if (!status) {
+      console.log('Invalid client');
+      return client.disconnect();
+    }
+
+    this.socketRepository.acceptTravel({ user: userId, travelId: message });
+  }
 }
