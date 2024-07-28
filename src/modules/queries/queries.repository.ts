@@ -1,7 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Promise } from 'mongoose';
-import { nearDrivers } from './aggregations/nearDrivers';
 import { GeoUtils } from 'src/utils/geoDistance';
 import { Viaje, obtenerViajesSimilares } from 'src/utils/shared';
 
@@ -15,8 +14,17 @@ export class QueriesRepository {
   async nearDrivers(data): Promise<any> {
     try {
       const { coordinates, distance } = data;
-      console.log(data);
-      return this.userDb.aggregate(nearDrivers(coordinates, distance));
+      return this.userDb.aggregate([
+        {
+          $geoNear: {
+            near: { type: 'Point', coordinates },
+            distanceField: 'dist.calculated',
+            maxDistance: distance,
+            query: { role: 'JUN' },
+            spherical: true,
+          },
+        },
+      ]);
     } catch (e) {
       throw new InternalServerErrorException('nearDrivers query error', e);
     }

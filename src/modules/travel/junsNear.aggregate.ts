@@ -1,7 +1,7 @@
 export const junsNear = (
   minDistance: number,
   maxDistance: number,
-  coordinates: any,
+  coordinates: [number, number],
 ) => [
   {
     $geoNear: {

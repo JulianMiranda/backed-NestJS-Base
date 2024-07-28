@@ -19,13 +19,11 @@ export class ImageRepository {
       throw new InternalServerErrorException('getImages Database error', e);
     }
   }
-
-  async insertImages(images: Array<Partial<Image>>): Promise<Image[]> {
-    try {
-      return this.imageDb.insertMany(images);
-    } catch (e) {
-      throw new InternalServerErrorException('createImage Database error', e);
-    }
+  async insertImages(
+    images: Partial<Image>[],
+  ): Promise<(Image & { _id: any })[]> {
+    const result = await this.imageDb.insertMany(images);
+    return result as (Image & { _id: any })[];
   }
 
   async deleteImages(images: string[]): Promise<any> {

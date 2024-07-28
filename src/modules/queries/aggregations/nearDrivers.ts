@@ -1,11 +1,10 @@
-export const nearDrivers = (coordinates, distance) => [
+export const nearDrivers = (coordinates: [number, number], distance) => [
   {
     $geoNear: {
       near: { type: 'Point', coordinates },
       distanceField: 'dist.calculated',
       maxDistance: distance,
       query: { role: 'JUN' },
-      /* includeLocs: 'dist.test', */
       spherical: true,
     },
   },

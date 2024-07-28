@@ -1,24 +1,24 @@
-import {IsArray, IsNumber, IsObject} from 'class-validator';
+import { IsArray, IsNumber, IsObject } from 'class-validator';
 
 export class MongoQuery {
-	@IsObject()
-	filter: object;
+  @IsObject()
+  filter: object;
 
-	@IsObject()
-	projection: object;
+  @IsObject()
+  projection: object;
 
-	@IsObject()
-	sort: object;
+  @IsObject()
+  sort: Record<string, 1 | -1>;
 
-	@IsNumber()
-	limit: number;
+  @IsNumber()
+  limit: number;
 
-	@IsNumber()
-	page: number;
+  @IsNumber()
+  page: number;
 
-	@IsNumber()
-	skip: number;
+  @IsNumber()
+  skip: number;
 
-	@IsArray()
-	population: any[];
+  @IsArray()
+  population: any[];
 }

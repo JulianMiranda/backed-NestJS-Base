@@ -1,10 +1,8 @@
-// otro-servicio.ts
-
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Coordinates, Travel } from 'src/dto/travel.dto';
 import { User } from 'src/dto/user.dto';
 import { Model } from 'mongoose';
-import { junsNear } from 'src/modules/travel/junsNear.aggregate';
+
 import { SocketService } from 'src/socket/socket.service';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -39,7 +37,7 @@ export class TravelService {
           },
         },
       );
-      if (travelDocument.nModified > 0) {
+      if (travelDocument.modifiedCount > 0) {
         console.log('El viaje se actualizó exitosamente.');
         this.socketService.acceptedTravel({ userId, travelId });
       } else {
@@ -87,12 +85,24 @@ export class TravelService {
     userDb: Model<User, object, object>,
   ): Promise<User[]> {
     const { longitude, latitude } = origen;
-    const coordinates = [latitude, longitude];
+    const coordinates: [number, number] = [latitude, longitude];
     console.log('BuscarChof', minDistance, maxDistance, coordinates);
 
-    const choferesCercanos = await userDb.aggregate(
-      junsNear(minDistance, maxDistance, coordinates),
-    );
+    const choferesCercanos = await userDb.aggregate([
+      {
+        $geoNear: {
+          near: { type: 'Point', coordinates },
+          distanceField: 'dist.calculated',
+          minDistance: minDistance,
+          maxDistance: maxDistance,
+          query: { role: 'JUN' },
+          includeLocs: 'dist.test',
+          spherical: true,
+        },
+      },
+      { $sort: { ratingAvg: -1 } },
+    ]);
+
     console.log('choferesCercanos', choferesCercanos);
 
     return choferesCercanos;
@@ -135,12 +145,13 @@ export class TravelService {
 
         break;
       }
-      const socketId = chofer._id; // Asume que tienes un campo socketId en tu entidad Chofer
+      const socketId = chofer._id.toString(); // Asume que tienes un campo socketId en tu entidad Chofer
+      const travelId = travel._id.toString(); // Asume que tienes un campo socketId en tu entidad Chofer
 
       // Enviar propuesta después de un tiempo de espera
       await this.enviarPropuestaPorSocketConTiempo(
         socketId,
-        travel._id,
+        travelId,
         tiempoEspera,
         socketService,
       );

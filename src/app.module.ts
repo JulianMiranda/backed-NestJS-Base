@@ -33,12 +33,7 @@ import UserSchema from './schemas/user.schema';
   imports: [
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_CONNECTION, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useCreateIndex: true,
-      useFindAndModify: false,
-    }),
+    MongooseModule.forRoot(process.env.MONGO_CONNECTION),
     MongooseModule.forFeature([{ name: Travel.name, schema: TravelSchema }]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
 

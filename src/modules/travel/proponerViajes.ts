@@ -1,5 +1,4 @@
 import { Coordinates, Travel } from 'src/dto/travel.dto';
-import { junsNear } from './junsNear.aggregate';
 import { User } from 'src/dto/user.dto';
 import { Model } from 'mongoose';
 import { SocketService } from 'src/socket/socket.service';
@@ -38,12 +37,24 @@ async function buscarChoferesCercanos(
   userDb: Model<User, object, object>,
 ): Promise<User[]> {
   const { longitude, latitude } = origen;
-  const coordinates = [latitude, longitude];
-  console.log('BuscarChof', minDistance, maxDistance, coordinates);
 
-  const choferesCercanos = await userDb.aggregate(
-    junsNear(minDistance, maxDistance, coordinates),
-  );
+  const coordinates: [number, number] = [latitude, longitude];
+
+  const choferesCercanos = await userDb.aggregate([
+    {
+      $geoNear: {
+        near: { type: 'Point', coordinates },
+        distanceField: 'dist.calculated',
+        minDistance: minDistance,
+        maxDistance: maxDistance,
+        query: { role: 'JUN' },
+        includeLocs: 'dist.test',
+        spherical: true,
+      },
+    },
+    { $sort: { ratingAvg: -1 } },
+  ]);
+
   console.log('choferesCercanos', choferesCercanos);
 
   return choferesCercanos;
@@ -86,12 +97,13 @@ async function proponerViajeAChoferes(
       // Si la propuesta ya ha sido aceptada, detener la iteración
       break;
     }
-    const socketId = chofer._id; // Asume que tienes un campo socketId en tu entidad Chofer
+    const socketId = chofer._id.toString(); // Asume que tienes un campo socketId en tu entidad Chofer
+    const travelId = travel._id.toString(); // Asume que tienes un campo socketId en tu entidad Chofer
 
     // Enviar propuesta después de un tiempo de espera
     await enviarPropuestaPorSocketConTiempo(
       socketId,
-      travel._id,
+      travelId,
       tiempoEspera,
       socketRepository,
     ).then(() => {

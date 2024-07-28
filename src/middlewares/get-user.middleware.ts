@@ -66,7 +66,7 @@ export class GetUserMiddleware implements NestMiddleware {
           email: userResp.email,
           role: userResp.role,
           phone_number: userResp.phone,
-          mongoId: userResp._id,
+          mongoId: userResp._id.toString(),
         };
       }
 

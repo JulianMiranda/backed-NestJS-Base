@@ -106,7 +106,6 @@ export class UserRepository {
       if (notificationTokens) {
         await this.userDb.findOneAndUpdate(
           { _id: id },
-          // @ts-expect-error: Unreachable code error
           { $addToSet: { notificationTokens } },
         );
       }

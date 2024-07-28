@@ -1,15 +1,10 @@
-import {
-  ArgumentMetadata,
-  BadRequestException,
-  Injectable,
-  PipeTransform,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import { MongoQuery } from 'src/dto/mongo-query.dto';
 import { OPERATORS } from '../enums/operators.enum';
 
 @Injectable()
 export class TransformQuery implements PipeTransform<any> {
-  async transform(value: any, metadata: ArgumentMetadata) {
+  async transform(value: any) {
     return this.transformQuery(value);
   }
 
@@ -40,9 +35,9 @@ export class TransformQuery implements PipeTransform<any> {
     return fields;
   }
 
-  transformSort(sort: any) {
+  transformSort(sort: any): { [key: string]: 1 | -1 } {
     if (!sort || JSON.stringify(sort) === '{}') return { updatedAt: -1 };
-    const response = {};
+    const response: { [key: string]: 1 | -1 } = {};
     for (const key of Object.keys(sort)) {
       if (sort[key] === 'asc' || sort[key] === 'ASC') response[key] = 1;
       if (sort[key] === 'desc' || sort[key] === 'DESC') response[key] = -1;
