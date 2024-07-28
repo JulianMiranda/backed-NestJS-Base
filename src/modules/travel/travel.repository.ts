@@ -8,10 +8,7 @@ import { Model } from 'mongoose';
 import { Message } from '../../dto/message.dto';
 import { MongoQuery } from '../../dto/mongo-query.dto';
 import { Travel } from '../../dto/travel.dto';
-import { ENTITY } from '../../enums/entity.enum'; /* 
-import { NOTIFICATION } from '../../enums/notification.enum';
-import { NotificationsRepository } from '../notifications/notifications.repository'; */
-import { SocketRepository } from 'src/socket/socket.repository';
+import { ENTITY } from '../../enums/entity.enum';
 import {
   findTravelsFast,
   findTravelsFastShared,
@@ -19,8 +16,9 @@ import {
   findTravelsScheduleShared,
 } from './find-travels-helper';
 import { User } from 'src/dto/user.dto';
-import { proponerViajeConLogicaTiempo } from './proponerViajes';
-import { Server, Socket } from 'socket.io';
+import { SocketService } from 'src/socket/socket.service';
+import { AppGateway } from 'src/app.gateway';
+import { TravelService } from 'src/services/travel.service';
 
 @Injectable()
 export class TravelRepository {
@@ -30,11 +28,13 @@ export class TravelRepository {
     @InjectModel('Travel') private travelDb: Model<Travel>,
     @InjectModel('Message') private messageDb: Model<Message>,
     @InjectModel('User') private userDb: Model<User>,
-    private socketRepository: SocketRepository /* 
+    private readonly socketService: SocketService,
+    private readonly travelService: TravelService,
+    private sockeGateway: AppGateway /*  private socketRepository: SocketRepository  */ /* 
     private notificationsRepository: NotificationsRepository, */,
   ) {}
 
-  public socket: Server;
+  /* public socket: Server; */
 
   async getList(query: MongoQuery): Promise<any> {
     try {
@@ -93,21 +93,18 @@ export class TravelRepository {
         { _id: document._id },
         { new: true },
       ); */
-      const a = await proponerViajeConLogicaTiempo(
+      /* const socket: Socket; */
+
+      /*   const a = await this.travelService.proponerViajeConLogicaTiempo(
         document,
-        this.socketRepository,
+        this.socketService,
+        this.userDb,
+      ); */
+      await this.travelService.proponerViajeConLogicaTiempo(
+        document,
+        this.socketService,
         this.userDb,
       );
-      console.log('A', a);
-
-      /*  this.searchDrivers(travel); */
-
-      /*  this.notificationsRepository.createTravelNotification(
-          travel._id,
-          NOTIFICATION.OPPORTUNITY,
-          data.user,
-          data.owner,
-        ); */
       return document;
     } catch (e) {
       throw new InternalServerErrorException('createTravel Database error', e);
@@ -127,9 +124,9 @@ export class TravelRepository {
       console.log('testFindDrivers');
       const document = await this.travelDb.findOne({ _id: id });
 
-      await proponerViajeConLogicaTiempo(
+      await this.travelService.proponerViajeConLogicaTiempo(
         document,
-        this.socketRepository,
+        this.socketService,
         this.userDb,
       );
       return document;
@@ -199,7 +196,7 @@ export class TravelRepository {
 
     switch (travel.type) {
       case 'fast':
-        findTravelsFast(travel, this.socketRepository, this.userDb);
+        findTravelsFast(travel, this.socketService, this.userDb);
         break;
       case 'fast':
         findTravelsFastShared();

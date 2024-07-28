@@ -1,23 +1,27 @@
 import { Coordinates, Travel } from 'src/dto/travel.dto';
 import { junsNear } from './junsNear.aggregate';
 import { User } from 'src/dto/user.dto';
-import { SocketRepository } from 'src/socket/socket.repository';
 import { Model } from 'mongoose';
+import { SocketService } from 'src/socket/socket.service';
 
 function enviarPropuestaPorSocketConTiempo(
   socketId: string,
   travelId: string,
   tiempoEspera: number,
-  socketRepository: SocketRepository,
+  socketService: SocketService,
 ): Promise<void> {
   return new Promise((resolve) => {
     const timeoutId = setTimeout(() => {
-      socketRepository.newTravel({
+      socketService.newTravel({
         travelId: travelId,
         userId: socketId,
       });
       resolve();
     }, tiempoEspera);
+
+    this.socketService.server.on('test', () => {
+      console.log('Testing socket');
+    });
 
     this.socket.on('accept-travel', () => {
       console.log('Socket en ProponerViaje');
@@ -99,7 +103,7 @@ async function proponerViajeAChoferes(
 
 export async function proponerViajeConLogicaTiempo(
   viaje: Travel,
-  socketRepository: SocketRepository,
+  socketService: SocketService,
   userDb: Model<User, object, object>,
 ): Promise<void> {
   console.log('proponerViajeConLogicaTiempo');
@@ -115,7 +119,7 @@ export async function proponerViajeConLogicaTiempo(
     maxDistance,
     tiempoEsperaInicial,
     viaje,
-    socketRepository,
+    socketService,
     userDb,
   );
 
@@ -127,7 +131,7 @@ export async function proponerViajeConLogicaTiempo(
       maxDistance + 1000,
       tiempoEsperaInicial,
       viaje,
-      socketRepository,
+      socketService,
       userDb,
     );
 

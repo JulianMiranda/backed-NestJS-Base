@@ -10,7 +10,6 @@ import { RoleController } from './modules/role/role.controller';
 import { RoleModule } from './modules/role/role.module';
 import { ImageController } from './modules/image/image.controller';
 import { ImageModule } from './modules/image/image.module';
-import { SocketController } from './socket/socket.controller';
 import { MessageController } from './modules/message/message.controller';
 import { SocketModule } from './socket/socket.module';
 import { MessageModule } from './modules/message/message.module';
@@ -24,6 +23,12 @@ import { QueriesController } from './modules/queries/queries.controller';
 import { GeoUtils } from './utils/geoDistance';
 import { CarModule } from './modules/car/car.module';
 import { CarsController } from './modules/car/car.controller';
+import { TravelService } from './services/travel.service';
+import TravelSchema from './schemas/travel.schema';
+import { Travel } from './dto/travel.dto';
+import { SocketService } from './socket/socket.service';
+import { User } from './dto/user.dto';
+import UserSchema from './schemas/user.schema';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -34,6 +39,9 @@ import { CarsController } from './modules/car/car.controller';
       useCreateIndex: true,
       useFindAndModify: false,
     }),
+    MongooseModule.forFeature([{ name: Travel.name, schema: TravelSchema }]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+
     AuthModule,
     UserModule,
     RoleModule,
@@ -45,7 +53,7 @@ import { CarsController } from './modules/car/car.controller';
     CarModule,
   ],
   controllers: [AppController],
-  providers: [GeoUtils],
+  providers: [GeoUtils, SocketService, TravelService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
@@ -57,7 +65,6 @@ export class AppModule implements NestModule {
         RoleController,
         ImageController,
         MessageController,
-        SocketController,
         TravelController,
         QueriesController,
         CarsController,

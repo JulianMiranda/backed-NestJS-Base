@@ -4,7 +4,7 @@ import { junsNear } from 'src/socket/junsNear-aggregation';
 
 export async function findTravelsFast(
   travel: Travel,
-  socketRepo: any,
+  socketService: any,
   userDb: any,
 ): Promise<any> {
   try {
@@ -19,7 +19,7 @@ export async function findTravelsFast(
     for (const jun of JUNs) {
       console.log('JUNs', jun);
       console.log('Enviar a JUNS new-travel', jun._id);
-      socketRepo.newTravel({
+      socketService.newTravel({
         travelId: travel._id.toString(),
         userId: jun._id,
       });

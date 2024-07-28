@@ -4,9 +4,10 @@ import { MessageSchema } from 'src/schemas/message.schema';
 import TravelSchema from '../../schemas/travel.schema';
 import { TravelController } from './travel.controller';
 import { TravelRepository } from './travel.repository';
-import { SocketModule } from 'src/socket/socket.module';
 import UserSchema from 'src/schemas/user.schema';
 import { AppGateway } from 'src/app.gateway';
+import { SocketService } from 'src/socket/socket.service';
+import { TravelService } from 'src/services/travel.service';
 
 @Module({
   imports: [
@@ -25,9 +26,9 @@ import { AppGateway } from 'src/app.gateway';
       },
     ]),
     /* NotificationsModule, */
-    SocketModule,
+    /*  SocketModule, */
   ],
   controllers: [TravelController],
-  providers: [TravelRepository, AppGateway],
+  providers: [TravelRepository, AppGateway, SocketService, TravelService],
 })
 export class TravelModule {}

@@ -2,10 +2,9 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppGateway } from '../app.gateway';
 import UserSchema from 'src/schemas/user.schema';
-import { SocketController } from './socket.controller';
-import { SocketRepository } from './socket.repository';
-import { MessageSchema } from 'src/schemas/message.schema';
 import TravelSchema from 'src/schemas/travel.schema';
+import { SocketService } from './socket.service';
+import { TravelService } from 'src/services/travel.service';
 
 @Module({
   imports: [
@@ -15,18 +14,11 @@ import TravelSchema from 'src/schemas/travel.schema';
         schema: UserSchema,
       },
       {
-        name: 'Message',
-        schema: MessageSchema,
-      },
-      {
         name: 'Travel',
         schema: TravelSchema,
       },
     ]),
   ],
-
-  controllers: [SocketController],
-  providers: [SocketRepository, AppGateway],
-  exports: [SocketRepository],
+  providers: [SocketService, TravelService, AppGateway],
 })
 export class SocketModule {}

@@ -1,23 +1,101 @@
-import { Logger } from '@nestjs/common';
+import { Logger, OnModuleInit } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { SocketRepository } from './socket/socket.repository';
+import { SocketService } from './socket/socket.service';
+import { TravelService } from './services/travel.service';
 
-@WebSocketGateway({ transport: ['websocket'] })
-export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
+@WebSocketGateway()
+export class AppGateway implements OnModuleInit {
   @WebSocketServer()
-  wss: Server;
-  socket: Socket;
-  constructor(private socketRepository: SocketRepository) {}
+  public server: Server;
+  private readonly logger = new Logger(SocketService.name);
 
+  constructor(
+    private socketService: SocketService,
+    private travelService: TravelService,
+  ) {}
+
+  afterInit(server: Server) {
+    this.socketService.server = server;
+  }
+
+  onModuleInit() {
+    this.server.on('connection', async (socket: Socket) => {
+      const token = socket.handshake.headers['x-token'];
+      if (!token) {
+        return socket.disconnect();
+      }
+
+      if (!token) {
+        return socket.disconnect();
+      }
+      if (typeof token !== 'string') {
+        return socket.disconnect();
+      }
+      const { status, userId } = await this.socketService.getUserToken({
+        token,
+      });
+      if (!status) {
+        console.log('Invalid client');
+        return socket.disconnect();
+      }
+      this.logger.log('New client connected', userId);
+      socket.join(userId);
+
+      socket.on('disconnect', () => {
+        this.socketService.onClientDisconnected(socket.id);
+      });
+    });
+  }
+
+  @SubscribeMessage('test')
+  handleMessage(
+    @MessageBody() message: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    if (!message) {
+      return;
+    }
+    console.log('Tests');
+    this.socketService.handleTest(client);
+  }
+
+  @SubscribeMessage('accept-travel')
+  async handleAceptTravel(
+    @MessageBody() message: string,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const token = socket.handshake.headers['x-token'];
+    if (!token) {
+      return socket.disconnect();
+    }
+
+    if (!token) {
+      return socket.disconnect();
+    }
+    if (typeof token !== 'string') {
+      return socket.disconnect();
+    }
+    const { status, userId } = await this.socketService.getUserToken({
+      token,
+    });
+    if (!status) {
+      console.log('Invalid client');
+      return socket.disconnect();
+    }
+    if (!message) {
+      return;
+    }
+    this.travelService.stopSearching(userId, message);
+  }
+
+  /* 
   private logger = new Logger('AppGateway');
 
   afterInit() {
@@ -86,5 +164,5 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     this.socketRepository.acceptTravel({ user: userId, travelId: message });
-  }
+  } */
 }
