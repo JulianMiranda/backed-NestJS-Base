@@ -171,6 +171,8 @@ export class UserRepository {
           lastTravel: true,
           acceptFastTravel: true,
           acceptScheduleTravel: true,
+          acceptSharedTravel: true,
+          acceptScheduleSharedTravel: true,
           location: true,
           ratingStars: true,
           ratingAvg: true,
@@ -182,19 +184,6 @@ export class UserRepository {
             select: { url: true, blurHash: true },
           },
         ]);
-
-      const { role } = rest;
-      if (role) {
-        /*   const { firebaseId, _id } = document;
-        const claims = { role, mongoId: _id };  */
-        /* 
-        FirebaseService.setName(firebaseId);
-        FirebaseService.setClaims(firebaseId, claims); */
-      }
-      /* if (name) {
-        const { firebaseId } = document;
-        FirebaseService.setName(firebaseId); 
-      }*/
 
       if (!document)
         throw new NotFoundException(

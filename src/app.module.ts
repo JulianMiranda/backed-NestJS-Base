@@ -26,9 +26,9 @@ import { CarsController } from './modules/car/car.controller';
 import { TravelService } from './services/travel.service';
 import TravelSchema from './schemas/travel.schema';
 import { Travel } from './dto/travel.dto';
-import { SocketService } from './socket/socket.service';
 import { User } from './dto/user.dto';
 import UserSchema from './schemas/user.schema';
+import { AppGateway } from './app.gateway';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -48,7 +48,8 @@ import UserSchema from './schemas/user.schema';
     CarModule,
   ],
   controllers: [AppController],
-  providers: [GeoUtils, SocketService, TravelService],
+  providers: [GeoUtils, AppGateway, TravelService],
+  exports: [AppGateway, TravelService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

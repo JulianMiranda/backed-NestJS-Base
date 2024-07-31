@@ -1,11 +1,14 @@
 import {
   IsDate,
+  IsEnum,
   IsMongoId,
   IsNumber,
   IsObject,
   IsString,
 } from 'class-validator';
 import { Document } from 'mongoose';
+import { TRAVELSTATE } from 'src/enums/travelstate.enum';
+import { TRAVELTYPE } from 'src/enums/traveltype.enum';
 
 export class Coordinates {
   @IsNumber()
@@ -33,11 +36,11 @@ export class TravelLocation {
 }
 
 export class Travel extends Document {
-  @IsString()
-  state: string;
+  @IsEnum(TRAVELSTATE)
+  state: TRAVELSTATE;
 
-  @IsString()
-  type: string;
+  @IsEnum(TRAVELTYPE)
+  type: TRAVELTYPE;
 
   @IsDate()
   date: Date;

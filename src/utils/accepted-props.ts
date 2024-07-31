@@ -31,6 +31,8 @@ const checkUsersProps = (data: Partial<User>): Partial<User> => {
     'lastTravelUpdate',
     'acceptFastTravel',
     'acceptScheduleTravel',
+    'acceptSharedTravel',
+    'acceptScheduleSharedTravel',
     'coordinates',
     'rating',
   ];

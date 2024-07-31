@@ -1,205 +1,160 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { Coordinates, Travel } from 'src/dto/travel.dto';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Coordinates, Travel, TravelPoint } from 'src/dto/travel.dto';
 import { User } from 'src/dto/user.dto';
 import { Model } from 'mongoose';
-
-import { SocketService } from 'src/socket/socket.service';
 import { InjectModel } from '@nestjs/mongoose';
+import { TRAVELTYPE } from 'src/enums/traveltype.enum';
+import { AppGateway } from 'src/app.gateway';
+import { TRAVELSTATE } from 'src/enums/travelstate.enum';
+import { choferesCercanosAggregate } from 'src/modules/travel/choferes-cercans.aggregate';
 
 @Injectable()
 export class TravelService {
   constructor(
     @InjectModel('Travel') private readonly travelDb: Model<Travel>,
-    private readonly socketService: SocketService,
+
+    @Inject(forwardRef(() => AppGateway)) private appGateway: AppGateway,
   ) {}
-
-  private propuestaAceptada = false;
-
-  async stopSearching(user, travel) {
-    console.log('stopSearching', user, travel);
-
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const ObjectId = require('mongodb').ObjectId;
-      const userId = ObjectId(user);
-      const travelId = ObjectId(travel);
-
-      const travelDocument = await this.travelDb.updateOne(
-        {
-          _id: travelId,
-          state: 'order',
-          driver: { $exists: false },
-        },
-        {
-          $set: {
-            driver: userId,
-            state: 'taked',
-          },
-        },
-      );
-      if (travelDocument.modifiedCount > 0) {
-        console.log('El viaje se actualizó exitosamente.');
-        this.socketService.acceptedTravel({ userId, travelId });
-      } else {
-        console.log(
-          'El viaje no se actualizó. Puede que no cumpla con los criterios de búsqueda.',
-        );
-        this.socketService.errorTakedTravel({ userId, travelId });
-      }
-      this.propuestaAceptada = true;
-    } catch (e) {
-      throw new InternalServerErrorException('stopSearching Database error', e);
+  private getTravelTypeField(type: TRAVELTYPE): string {
+    switch (type) {
+      case TRAVELTYPE.FAST:
+        return 'acceptFastTravel';
+      case TRAVELTYPE.SCHEDULE:
+        return 'acceptScheduleTravel';
+      case TRAVELTYPE.FASTSHARED:
+        return 'acceptFastSharedTravel';
+      case TRAVELTYPE.SCHEDULESHARED:
+        return 'acceptScheduleSharedTravel';
+      default:
+        throw new Error('Tipo de viaje no válido');
     }
   }
-
-  async enviarPropuestaPorSocketConTiempo(
-    socketId: string,
-    travelId: string,
-    tiempoEspera: number,
-    socketService: SocketService,
-  ): Promise<void> {
-    // ... lógica antes de enviar la propuesta
-
-    // Enviar propuesta después de un tiempo de espera
-    await this.tiempoDeEspera(tiempoEspera);
-
-    if (!this.propuestaAceptada) {
-      socketService.newTravel({
-        userId: socketId,
-        travelId,
-      });
-    }
-
-    /*  setTimeout(() => {
-      socketService.newTravel({
-        userId: socketId,
-        travelId,
-      });
-    }, tiempoEspera); */
-  }
-
   async buscarChoferesCercanos(
     origen: Coordinates,
     minDistance: number,
     maxDistance: number,
+    travelTypeField: string,
     userDb: Model<User, object, object>,
   ): Promise<User[]> {
     const { longitude, latitude } = origen;
     const coordinates: [number, number] = [latitude, longitude];
-    console.log('BuscarChof', minDistance, maxDistance, coordinates);
 
-    const choferesCercanos = await userDb.aggregate([
-      {
-        $geoNear: {
-          near: { type: 'Point', coordinates },
-          distanceField: 'dist.calculated',
-          minDistance: minDistance,
-          maxDistance: maxDistance,
-          query: { role: 'JUN' },
-          includeLocs: 'dist.test',
-          spherical: true,
-        },
-      },
-      { $sort: { ratingAvg: -1 } },
-    ]);
-
-    console.log('choferesCercanos', choferesCercanos);
+    const choferesCercanos = await userDb.aggregate(
+      choferesCercanosAggregate(
+        minDistance,
+        maxDistance,
+        coordinates,
+        travelTypeField,
+      ),
+    );
 
     return choferesCercanos;
   }
-  tiempoDeEspera(tiempoEspera: number): Promise<void> {
-    return new Promise((resolve) => {
-      // Utilizar setTimeout para esperar un tiempo adicional
-      setTimeout(() => {
-        resolve(); // Resuelve la promesa después del tiempo de espera adicional
-      }, tiempoEspera);
-    });
-  }
 
-  async proponerViajeAChoferes(
-    origen: Coordinates,
+  async proponerViajeOnetoOne(
+    viaje: Travel,
+    userDb: Model<User, object, object>,
     minDistance: number,
     maxDistance: number,
-    tiempoEspera: number,
-    travel: Travel,
-    socketService: any,
-    userDb: Model<User, object, object>,
   ): Promise<void> {
-    console.log('proponerViajeAChoferes');
-    console.log('origen', origen);
-    console.log('minDistance', minDistance);
-    console.log('maxDistance', maxDistance);
-    console.log('tiempoEspera', tiempoEspera);
-    console.log('travel', travel.id);
+    const { fromCoordinates, type } = viaje;
+    const travelTypeField = this.getTravelTypeField(type);
+    const origen = viaje.fromLocation.travelPoint.coordinates;
+
     const choferesCercanos = await this.buscarChoferesCercanos(
       origen,
       minDistance,
       maxDistance,
+      travelTypeField,
       userDb,
     );
-
+    let accepted = false;
     for (const chofer of choferesCercanos) {
-      if (this.propuestaAceptada) {
-        // Si la propuesta ya ha sido aceptada, detener la iteración
-        console.log('Break Propusta aceptada');
-
-        break;
-      }
-      const socketId = chofer._id.toString(); // Asume que tienes un campo socketId en tu entidad Chofer
-      const travelId = travel._id.toString(); // Asume que tienes un campo socketId en tu entidad Chofer
-
-      // Enviar propuesta después de un tiempo de espera
-      await this.enviarPropuestaPorSocketConTiempo(
-        socketId,
-        travelId,
-        tiempoEspera,
-        socketService,
-      );
-    }
-    await this.tiempoDeEspera(tiempoEspera);
-  }
-
-  async proponerViajeConLogicaTiempo(
-    viaje: Travel,
-    socketService: SocketService,
-    userDb: Model<User, object, object>,
-  ): Promise<void> {
-    console.log('TravelService proponerViajeConLogicaTiempo');
-
-    const origen = viaje.fromLocation.travelPoint.coordinates;
-    const minDistance = 1;
-    const maxDistance = 1000;
-    const tiempoEsperaInicial = 5000;
-    const tiempoEsperaAdicional = 20000;
-    await this.proponerViajeAChoferes(
-      origen,
-      minDistance,
-      maxDistance,
-      tiempoEsperaInicial,
-      viaje,
-      socketService,
-      userDb,
-    );
-
-    // Después de 1 minuto, amplía el radio de búsqueda y vuelve a proponer el viaje
-    setTimeout(async () => {
-      await this.proponerViajeAChoferes(
-        origen,
-        minDistance + 1001,
-        maxDistance + 1000,
-        tiempoEsperaInicial,
+      accepted = await this.proponerViajeAChofer(
         viaje,
-        socketService,
-        userDb,
+        chofer,
+        fromCoordinates,
       );
-
-      // Si después de un tiempo adicional no hay respuesta, puedes realizar acciones adicionales
-      setTimeout(() => {
-        console.log(
-          'Ningún chofer ha aceptado el viaje después del tiempo adicional.',
+      if (accepted) {
+        console.log('Viaje aceptado');
+        const result = await this.travelDb.updateOne(
+          {
+            _id: viaje._id,
+            state: TRAVELSTATE.ORDER,
+            $or: [{ driver: { $exists: false } }, { driver: null }],
+          },
+          {
+            $set: {
+              state: TRAVELSTATE.TAKED,
+              driver: chofer._id,
+            },
+          },
         );
-        // Puedes implementar lógica adicional aquí, como buscar choferes en una ubicación más amplia, etc.
-      }, tiempoEsperaAdicional);
-    }, tiempoEsperaAdicional);
+
+        if (result.modifiedCount > 0) {
+          // Si la actualización fue exitosa
+          this.appGateway.emitToClient(viaje.user.toString(), 'viaje-tomado', {
+            chofer,
+          });
+          this.appGateway.emitToClient(
+            chofer._id.toString(),
+            'viaje-confirmado',
+            { viaje },
+          );
+          console.log('Viaje aceptado');
+        } else {
+          console.log(
+            'El viaje no se pudo actualizar, ya fue tomado por otro chofer.',
+          );
+          this.appGateway.emitToClient(
+            chofer._id.toString(),
+            'viaje-no-confirmado',
+            { message: 'No se pudo actualizar el viaje' },
+          );
+        }
+        break;
+      } else {
+        console.log('viaje no aceptado');
+      }
+    }
+
+    if (!accepted) {
+      this.appGateway.emitToClient(viaje.user.toString(), 'viaje-no-tomado', {
+        message: 'Ningún chofer aceptó el viaje',
+      });
+    }
   }
+
+  private async proponerViajeAChofer(
+    viaje: Travel,
+    chofer: User,
+    fromCoordinates: TravelPoint,
+  ): Promise<boolean> {
+    return new Promise((resolve) => {
+      const clientId = chofer._id.toString();
+      console.log('Viaje propuesto a: ', clientId);
+      this.appGateway.emitToClient(clientId, 'propuesta-viaje', {
+        viajeId: viaje._id,
+        choferId: clientId,
+        fromCoordinates: fromCoordinates,
+        cost: viaje.cost,
+        currency: viaje.currency,
+        type: viaje.type,
+      });
+      const timeout = setTimeout(() => {
+        resolve(false);
+      }, 15000);
+      this.appGateway.handleMessageRespPropuestaTS = (response) => {
+        if (
+          response.viajeId === viaje._id.toString() &&
+          response.choferId === clientId
+        ) {
+          clearTimeout(timeout);
+          resolve(response.accepted);
+        }
+      };
+    });
+  }
+
+  /*---------------------------------------ANTES---------------------------------------*/
 }

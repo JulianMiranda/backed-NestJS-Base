@@ -6,7 +6,6 @@ import { TravelController } from './travel.controller';
 import { TravelRepository } from './travel.repository';
 import UserSchema from 'src/schemas/user.schema';
 import { AppGateway } from 'src/app.gateway';
-import { SocketService } from 'src/socket/socket.service';
 import { TravelService } from 'src/services/travel.service';
 
 @Module({
@@ -29,6 +28,6 @@ import { TravelService } from 'src/services/travel.service';
     /*  SocketModule, */
   ],
   controllers: [TravelController],
-  providers: [TravelRepository, AppGateway, SocketService, TravelService],
+  providers: [TravelRepository, AppGateway, TravelService],
 })
 export class TravelModule {}

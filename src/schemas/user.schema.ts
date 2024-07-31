@@ -15,6 +15,8 @@ const UserSchema = new mongoose.Schema(
     status: { type: Boolean, default: true, index: true },
     acceptFastTravel: { type: Boolean, default: false, index: true },
     acceptScheduleTravel: { type: Boolean, default: false, index: true },
+    acceptSharedTravel: { type: Boolean, default: false, index: true },
+    acceptScheduleSharedTravel: { type: Boolean, default: false, index: true },
     reciveNotifications: { type: Boolean, default: true, index: true },
     notificationTokens: [{ type: String }],
     theme: {

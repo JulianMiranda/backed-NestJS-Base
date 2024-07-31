@@ -3,8 +3,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppGateway } from '../app.gateway';
 import UserSchema from 'src/schemas/user.schema';
 import TravelSchema from 'src/schemas/travel.schema';
-import { SocketService } from './socket.service';
-import { TravelService } from 'src/services/travel.service';
 
 @Module({
   imports: [
@@ -19,6 +17,6 @@ import { TravelService } from 'src/services/travel.service';
       },
     ]),
   ],
-  providers: [SocketService, TravelService, AppGateway],
+  providers: [AppGateway],
 })
 export class SocketModule {}

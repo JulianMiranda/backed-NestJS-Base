@@ -16,8 +16,6 @@ import {
   findTravelsScheduleShared,
 } from './find-travels-helper';
 import { User } from 'src/dto/user.dto';
-import { SocketService } from 'src/socket/socket.service';
-import { AppGateway } from 'src/app.gateway';
 import { TravelService } from 'src/services/travel.service';
 
 @Injectable()
@@ -28,10 +26,7 @@ export class TravelRepository {
     @InjectModel('Travel') private travelDb: Model<Travel>,
     @InjectModel('Message') private messageDb: Model<Message>,
     @InjectModel('User') private userDb: Model<User>,
-    private readonly socketService: SocketService,
     private readonly travelService: TravelService,
-    private sockeGateway: AppGateway /*  private socketRepository: SocketRepository  */ /* 
-    private notificationsRepository: NotificationsRepository, */,
   ) {}
 
   /* public socket: Server; */
@@ -89,22 +84,15 @@ export class TravelRepository {
       };
       const newTravel = new this.travelDb(data);
       const document = await newTravel.save();
-      /*   const travel = await this.travelDb.findOneAndUpdate(
-        { _id: document._id },
-        { new: true },
-      ); */
-      /* const socket: Socket; */
-
-      /*   const a = await this.travelService.proponerViajeConLogicaTiempo(
+      const minDistance = 1;
+      const maxDistance = 10000;
+      this.travelService.proponerViajeOnetoOne(
         document,
-        this.socketService,
         this.userDb,
-      ); */
-      await this.travelService.proponerViajeConLogicaTiempo(
-        document,
-        this.socketService,
-        this.userDb,
+        minDistance,
+        maxDistance,
       );
+
       return document;
     } catch (e) {
       throw new InternalServerErrorException('createTravel Database error', e);
@@ -123,11 +111,13 @@ export class TravelRepository {
       };
       console.log('testFindDrivers');
       const document = await this.travelDb.findOne({ _id: id });
-
-      await this.travelService.proponerViajeConLogicaTiempo(
+      const minDistance = 1;
+      const maxDistance = 10000;
+      this.travelService.proponerViajeOnetoOne(
         document,
-        this.socketService,
         this.userDb,
+        minDistance,
+        maxDistance,
       );
       return document;
     } catch (e) {
@@ -145,15 +135,11 @@ export class TravelRepository {
       if (toCoordinates)
         data.toLocation = { type: 'Point', travelPoint: toCoordinates };
 
-      const document = await this.travelDb
-        .findOneAndUpdate({ _id: id }, data, { new: true })
-        .populate([
-          {
-            path: 'images',
-            match: { status: true },
-            select: { url: true },
-          },
-        ]);
+      const document = await this.travelDb.findOneAndUpdate(
+        { _id: id },
+        { ...data },
+        { new: true },
+      );
 
       if (!document)
         throw new NotFoundException(
@@ -196,7 +182,7 @@ export class TravelRepository {
 
     switch (travel.type) {
       case 'fast':
-        findTravelsFast(travel, this.socketService, this.userDb);
+        findTravelsFast(travel, this.userDb);
         break;
       case 'fast':
         findTravelsFastShared();
@@ -212,40 +198,3 @@ export class TravelRepository {
     }
   }
 }
-/* private async proponerViajeConLogicaTiempo(viaje: Travel): Promise<void> {
-  console.log('proponerViajeConLogicaTiempo');
-
-  const origen = viaje.fromLocation.travelPoint.coordinates;  */ // Supongamos que origen es un objeto con las coordenadas
-/*   const radioInicialBusqueda = 1.0; */ // Radio de búsqueda inicial en kilómetros
-/* const tiempoEsperaInicial = 3000;  */ // Tiempo de espera inicial en milisegundos (3 segundos)
-/* const tiempoEsperaAdicional = 60000;  */ // Tiempo de espera adicional después de 1 minuto en milisegundos (60 segundos)
-
-// Propone el viaje a choferes en un radio de búsqueda inicial
-/*  this.logger.log(
-    'Propone el viaje a choferes en un radio de búsqueda inicial',
-  ); */
-/*  await this.proponerViajeAChoferes(
-    origen,
-    radioInicialBusqueda,
-    tiempoEsperaInicial,
-    viaje,
-  ); */
-
-// Después de 1 minuto, amplía el radio de búsqueda y vuelve a proponer el viaje
-/*  setTimeout(async () => {
-    await this.proponerViajeAChoferes(
-      origen,
-      radioInicialBusqueda * 2,
-      tiempoEsperaInicial,
-      viaje,
-    ); */
-
-// Si después de un tiempo adicional no hay respuesta, puedes realizar acciones adicionales
-/* setTimeout(() => {
-      console.log(
-        'Ningún chofer ha aceptado el viaje después del tiempo adicional.',
-      ); */
-// Puedes implementar lógica adicional aquí, como buscar choferes en una ubicación más amplia, etc.
-/*  }, tiempoEsperaAdicional);
-  }, tiempoEsperaAdicional);
-} */
