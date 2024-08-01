@@ -161,10 +161,10 @@ export class TravelService {
             'viaje-confirmado',
             { viaje },
           );
-          /*  await this.userDb.updateOne(
+          await this.userDb.updateOne(
             { _id: response.choferId },
             { isInTravel: true },
-          ); */
+          );
           this.travelAcceptedAfterTime = true;
         } else {
           this.appGateway.emitToClient(
