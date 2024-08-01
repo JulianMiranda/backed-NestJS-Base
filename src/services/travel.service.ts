@@ -10,11 +10,14 @@ import { choferesCercanosAggregate } from 'src/modules/travel/choferes-cercans.a
 
 @Injectable()
 export class TravelService {
+  private pendingProposals: Map<string, (accepted: boolean) => void> =
+    new Map();
+
   constructor(
     @InjectModel('Travel') private readonly travelDb: Model<Travel>,
-
     @Inject(forwardRef(() => AppGateway)) private appGateway: AppGateway,
   ) {}
+
   private getTravelTypeField(type: TRAVELTYPE): string {
     switch (type) {
       case TRAVELTYPE.FAST:
@@ -29,6 +32,7 @@ export class TravelService {
         throw new Error('Tipo de viaje no válido');
     }
   }
+
   async buscarChoferesCercanos(
     origen: Coordinates,
     minDistance: number,
@@ -57,7 +61,7 @@ export class TravelService {
     minDistance: number,
     maxDistance: number,
   ): Promise<void> {
-    const { fromCoordinates, type } = viaje;
+    const { type } = viaje;
     const travelTypeField = this.getTravelTypeField(type);
     const origen = viaje.fromLocation.travelPoint.coordinates;
 
@@ -68,13 +72,10 @@ export class TravelService {
       travelTypeField,
       userDb,
     );
+
     let accepted = false;
     for (const chofer of choferesCercanos) {
-      accepted = await this.proponerViajeAChofer(
-        viaje,
-        chofer,
-        fromCoordinates,
-      );
+      accepted = await this.proponerViajeAChofer(viaje, chofer);
       if (accepted) {
         console.log('Viaje aceptado');
         const result = await this.travelDb.updateOne(
@@ -123,38 +124,61 @@ export class TravelService {
         message: 'Ningún chofer aceptó el viaje',
       });
     }
+
+    // Manejo de choferes que no aceptaron la propuesta después del ciclo
+    this.pendingProposals.forEach((resolve, choferId) => {
+      console.log('foreach');
+      resolve(false);
+      this.appGateway.emitToClient(choferId, 'viaje-no-confirmado', {
+        message: 'El viaje no fue confirmado a tiempo',
+      });
+    });
+    this.pendingProposals.clear();
   }
 
   private async proponerViajeAChofer(
     viaje: Travel,
     chofer: User,
-    fromCoordinates: TravelPoint,
   ): Promise<boolean> {
     return new Promise((resolve) => {
       const clientId = chofer._id.toString();
       console.log('Viaje propuesto a: ', clientId);
       this.appGateway.emitToClient(clientId, 'propuesta-viaje', {
-        viajeId: viaje._id,
         choferId: clientId,
-        fromCoordinates: fromCoordinates,
+        viajeId: viaje._id,
         cost: viaje.cost,
         currency: viaje.currency,
         type: viaje.type,
+        createdAt: viaje.date,
+        fromLocation: viaje.fromCoordinates,
+        toLocation: viaje.toLocation,
       });
       const timeout = setTimeout(() => {
+        this.pendingProposals.delete(clientId);
         resolve(false);
-      }, 15000);
-      this.appGateway.handleMessageRespPropuestaTS = (response) => {
-        if (
-          response.viajeId === viaje._id.toString() &&
-          response.choferId === clientId
-        ) {
-          clearTimeout(timeout);
-          resolve(response.accepted);
-        }
-      };
+      }, 10000);
+      this.pendingProposals.set(clientId, (accepted: boolean) => {
+        clearTimeout(timeout);
+        resolve(accepted);
+      });
     });
   }
 
-  /*---------------------------------------ANTES---------------------------------------*/
+  handlePropuestaResponse(response: {
+    viajeId: string;
+    choferId: string;
+    accepted: boolean;
+  }) {
+    const resolve = this.pendingProposals.get(response.choferId);
+    if (resolve) {
+      resolve(response.accepted);
+      this.pendingProposals.delete(response.choferId);
+    } else {
+      // El chofer responde después de que el ciclo ha terminado o el chofer no recibió la propuesta
+      this.appGateway.emitToClient(response.choferId, 'viaje-no-confirmado', {
+        message:
+          'El viaje no fue confirmado a tiempo o no se le hizo la propuesta',
+      });
+    }
+  }
 }

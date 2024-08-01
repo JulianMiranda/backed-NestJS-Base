@@ -28,7 +28,7 @@ import TravelSchema from './schemas/travel.schema';
 import { Travel } from './dto/travel.dto';
 import { User } from './dto/user.dto';
 import UserSchema from './schemas/user.schema';
-import { AppGateway } from './app.gateway';
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -48,8 +48,8 @@ import { AppGateway } from './app.gateway';
     CarModule,
   ],
   controllers: [AppController],
-  providers: [GeoUtils, AppGateway, TravelService],
-  exports: [AppGateway, TravelService],
+  providers: [GeoUtils, TravelService],
+  exports: [TravelService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

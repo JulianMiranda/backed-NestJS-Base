@@ -1,9 +1,10 @@
-import { Logger, OnModuleInit } from '@nestjs/common';
+import { forwardRef, Inject, Logger, OnModuleInit } from '@nestjs/common';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Model } from 'mongoose';
 import { User } from './dto/user.dto';
 import { InjectModel } from '@nestjs/mongoose';
+import { TravelService } from './services/travel.service';
 
 interface RespPropuesta {
   viajeId: string;
@@ -17,10 +18,17 @@ export class AppGateway implements OnModuleInit {
   public server: Server;
   private clients: Map<string, Socket> = new Map();
   private readonly logger = new Logger('SocketGateway');
+  private isInitialized = false;
 
-  constructor(@InjectModel('User') private userDb: Model<User>) {}
+  constructor(
+    @InjectModel('User') private userDb: Model<User>,
+    @Inject(forwardRef(() => TravelService))
+    private travelService: TravelService,
+  ) {}
 
   onModuleInit() {
+    if (this.isInitialized) return;
+    this.isInitialized = true;
     this.server.on('connection', async (socket: Socket) => {
       const token = socket.handshake.headers['x-token'];
       if (!token) {
@@ -43,9 +51,8 @@ export class AppGateway implements OnModuleInit {
         this.clients.delete(userId);
         this.logger.log('Client disconnected', socket.id);
       });
-      socket.on('respuesta-propuesta', (response) => {
-        console.log('Respuesta de propuesta', response);
-        this.handleMessageRespPropuestaTS(response);
+      socket.on('respuesta-propuesta', (response: RespPropuesta) => {
+        this.travelService.handlePropuestaResponse(response);
       });
     });
   }
@@ -64,13 +71,11 @@ export class AppGateway implements OnModuleInit {
     }
   }
 
-  handleMessageRespPropuestaTS(response: RespPropuesta) {
-    const {} = response;
-  }
-
   emitToClient(clientId: string, event: string, payload: any) {
     const clientSocket = this.clients.get(clientId);
     if (clientSocket) {
+      console.log(payload);
+
       clientSocket.emit(event, payload);
     }
   }

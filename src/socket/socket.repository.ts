@@ -1,11 +1,6 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Server } from 'socket.io';
 import { Message } from 'src/dto/message.dto';
 import { User } from 'src/dto/user.dto';
 import { ENTITY } from 'src/enums/entity.enum';
@@ -22,9 +17,6 @@ export class SocketRepository {
     @InjectModel('Message')
     private messageDb: Model<Message> /* private appGateway: AppGateway, */,
   ) {}
-  public socket: Server;
-  private logger = new Logger('AppGateway');
-
   async getUsers(uid: any): Promise<any> {
     try {
       const messages = await this.messageDb.find({
@@ -60,79 +52,6 @@ export class SocketRepository {
     } catch (e) {
       throw new InternalServerErrorException(
         'filter grabarMensaje Database error',
-        e,
-      );
-    }
-  }
-
-  async newTravel({ travelId, userId }): Promise<any> {
-    try {
-      this.socket.to(userId.toString()).emit('new-travel', travelId);
-      this.socket.to('655197ebf39275245d0f7b76').emit('test');
-
-      this.logger.log(`new-travel to: ${userId} travel: ${travelId}`);
-    } catch (e) {
-      throw new InternalServerErrorException(
-        'filter newTravel Database error',
-        e,
-      );
-    }
-  }
-  async acceptTravel({
-    user,
-    travelId,
-  }: {
-    user: string;
-    travelId: string;
-  }): Promise<any> {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const ObjectId = require('mongodb').ObjectId;
-      const userId = ObjectId(user);
-      const travel = ObjectId(travelId);
-
-      const travelDocument = await this.travelDb.updateOne(
-        {
-          _id: travel,
-          state: 'order',
-          driver: { $exists: false },
-        },
-        {
-          $set: {
-            driver: userId,
-            state: 'taked',
-          },
-        },
-      );
-      console.log(travelDocument);
-    } catch (e) {
-      throw new InternalServerErrorException(
-        'filter newTravel Database error',
-        e,
-      );
-    }
-  }
-
-  async enviarDirect(id: string, opportunity: Partial<any>): Promise<any> {
-    try {
-      this.socket.to(id).emit('oportunidad-directa', opportunity);
-      /* this.appGateway.wss
-					.to(id)
-					.emit('oportunidad-posible', {mensaje: 'oportunidad-posible'}); */
-    } catch (e) {
-      throw new InternalServerErrorException(
-        'filter enviarDirect Database error',
-        e,
-      );
-    }
-  }
-
-  async acceptedOwner(id: string): Promise<any> {
-    try {
-      this.socket.to(id).emit('accepted-owner');
-    } catch (e) {
-      throw new InternalServerErrorException(
-        'filter enviarDirect Database error',
         e,
       );
     }
