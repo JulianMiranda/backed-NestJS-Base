@@ -65,6 +65,9 @@ export class User extends Document {
   acceptFastTravel: boolean;
 
   @IsBoolean()
+  isInTravel: boolean;
+
+  @IsBoolean()
   acceptScheduleTravel: boolean;
 
   @IsLatLong()

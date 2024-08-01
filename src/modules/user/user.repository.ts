@@ -176,6 +176,7 @@ export class UserRepository {
           location: true,
           ratingStars: true,
           ratingAvg: true,
+          isInTravel: true,
         })
         .populate([
           {

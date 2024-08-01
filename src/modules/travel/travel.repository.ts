@@ -88,7 +88,6 @@ export class TravelRepository {
       const maxDistance = 10000;
       this.travelService.proponerViajeOnetoOne(
         document,
-        this.userDb,
         minDistance,
         maxDistance,
       );
@@ -115,7 +114,6 @@ export class TravelRepository {
       const maxDistance = 10000;
       this.travelService.proponerViajeOnetoOne(
         document,
-        this.userDb,
         minDistance,
         maxDistance,
       );

@@ -13,6 +13,7 @@ const UserSchema = new mongoose.Schema(
     defaultImage: String,
     image: { type: mongoose.Schema.Types.ObjectId, ref: 'Image' },
     status: { type: Boolean, default: true, index: true },
+    isInTravel: { type: Boolean, default: false, index: true },
     acceptFastTravel: { type: Boolean, default: false, index: true },
     acceptScheduleTravel: { type: Boolean, default: false, index: true },
     acceptSharedTravel: { type: Boolean, default: false, index: true },

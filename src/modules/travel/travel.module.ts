@@ -25,8 +25,6 @@ import { SocketModule } from 'src/socket/socket.module';
         schema: UserSchema,
       },
     ]),
-    /* NotificationsModule, */
-    /*  SocketModule, */
   ],
   controllers: [TravelController],
   providers: [TravelRepository, TravelService],

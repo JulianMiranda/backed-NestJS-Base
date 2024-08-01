@@ -24,6 +24,7 @@ const checkUsersProps = (data: Partial<User>): Partial<User> => {
     'role',
     'image',
     'status',
+    'isInTravel',
     'notificationTokens',
     'theme',
     'reciveNotifications',

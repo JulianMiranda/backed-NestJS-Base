@@ -33,6 +33,7 @@ export class AuthRepository {
             location: true,
             ratingStars: true,
             ratingAvg: true,
+            isInTravel: true,
           })
           .populate([
             {
@@ -79,6 +80,7 @@ export class AuthRepository {
           location: true,
           ratingStars: true,
           ratingAvg: true,
+          isInTravel: true,
         })
         .populate([
           {

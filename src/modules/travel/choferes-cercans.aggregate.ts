@@ -15,12 +15,13 @@ export function choferesCercanosAggregate(
         query: {
           role: 'JUN',
           [travelTypeField]: true,
+          isInTravel: false,
         },
         includeLocs: 'dist.test',
         spherical: true,
       },
     },
-    { $match: { [travelTypeField]: true } },
+    { $match: { [travelTypeField]: true, isInTravel: false } },
     { $sort: { ratingAvg: -1 } },
   ];
 }

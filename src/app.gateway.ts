@@ -74,8 +74,6 @@ export class AppGateway implements OnModuleInit {
   emitToClient(clientId: string, event: string, payload: any) {
     const clientSocket = this.clients.get(clientId);
     if (clientSocket) {
-      console.log(payload);
-
       clientSocket.emit(event, payload);
     }
   }
