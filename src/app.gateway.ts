@@ -7,8 +7,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { TravelService } from './services/travel.service';
 
 interface RespPropuesta {
-  viajeId: string;
-  choferId: string;
+  id: string;
+  driver: string;
   accepted: boolean;
 }
 

@@ -3,4 +3,5 @@ export enum ENTITY {
   MESSAGES = 'messages',
   TRAVELS = 'travels',
   CARS = 'cars',
+  PRICES = 'prices',
 }

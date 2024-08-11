@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsDate,
   IsEnum,
   IsMongoId,
@@ -44,6 +45,9 @@ export class Travel extends Document {
 
   @IsDate()
   date: Date;
+
+  @IsBoolean()
+  status: boolean;
 
   @IsMongoId()
   @IsObject()

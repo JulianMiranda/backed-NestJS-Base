@@ -6,6 +6,7 @@ import { User } from '../dto/user.dto';
 import { ENTITY } from '../enums/entity.enum';
 import { Travel } from 'src/dto/travel.dto';
 import { Car } from 'src/dto/car.dto';
+import { Price } from 'src/dto/price.dto';
 
 const checkProps = (props: string[], dataKeys: string[]) => {
   for (const key of dataKeys) {
@@ -97,10 +98,17 @@ const checkCarProps = (data: Partial<Car>): Partial<Car> => {
   return data;
 };
 
+const checkPriceProps = (data: Partial<Price>): Partial<Price> => {
+  const props = ['mlc', 'mn', 'usd'];
+  checkProps(props, Object.keys(data));
+  return data;
+};
+
 export const acceptedProps = (route: string, data: any): any => {
   if (route === ENTITY.USERS) return checkUsersProps(data);
   else if (route === ENTITY.TRAVELS) return checkTravelProps(data);
   else if (route === ENTITY.MESSAGES) return checkMessageProps(data);
   else if (route === ENTITY.CARS) return checkCarProps(data);
+  else if (route === ENTITY.PRICES) return checkPriceProps(data);
   throw new InternalServerErrorException('Invalid Route');
 };

@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -17,6 +18,7 @@ import {
 } from './find-travels-helper';
 import { User } from 'src/dto/user.dto';
 import { TravelService } from 'src/services/travel.service';
+import { TRAVELSTATE } from 'src/enums/travelstate.enum';
 
 @Injectable()
 export class TravelRepository {
@@ -29,9 +31,51 @@ export class TravelRepository {
     private readonly travelService: TravelService,
   ) {}
 
-  /* public socket: Server; */
-
   async getList(query: MongoQuery): Promise<any> {
+    try {
+      const { filter, projection, sort, limit, skip, page, population } = query;
+      const [count, opportunities] = await Promise.all([
+        this.travelDb.countDocuments(filter),
+        this.travelDb
+          .find(filter, projection)
+          .sort(sort)
+          .limit(limit)
+          .skip(skip)
+          .populate(population),
+      ]);
+      const totalPages = limit !== 0 ? Math.floor(count / limit) : 1;
+      return { count, page, totalPages, data: opportunities };
+    } catch (e) {
+      throw new InternalServerErrorException(
+        'filter opportunities Database error',
+        e,
+      );
+    }
+  }
+
+  async getListFastTravel(query: MongoQuery): Promise<any> {
+    try {
+      const { filter, projection, sort, limit, skip, page, population } = query;
+      const [count, opportunities] = await Promise.all([
+        this.travelDb.countDocuments(filter),
+        this.travelDb
+          .find(filter, projection)
+          .sort(sort)
+          .limit(limit)
+          .skip(skip)
+          .populate(population),
+      ]);
+      const totalPages = limit !== 0 ? Math.floor(count / limit) : 1;
+      return { count, page, totalPages, data: opportunities };
+    } catch (e) {
+      throw new InternalServerErrorException(
+        'filter opportunities Database error',
+        e,
+      );
+    }
+  }
+
+  async getListScheduleTravel(query: MongoQuery): Promise<any> {
     try {
       const { filter, projection, sort, limit, skip, page, population } = query;
       const [count, opportunities] = await Promise.all([
@@ -64,6 +108,28 @@ export class TravelRepository {
         throw new NotFoundException(`Could not find Travel for id: ${id}`);
 
       return document;
+    } catch (e) {
+      if (e.status === 404) throw e;
+      else
+        throw new InternalServerErrorException('findTravel Database error', e);
+    }
+  }
+  async getDriverTravel(user: User): Promise<Travel> {
+    try {
+      const { id } = user;
+      const travel = await this.travelDb
+        .findOne({
+          driver: id,
+          state: 'taked',
+          status: true,
+        })
+        .sort({ createdAt: -1 });
+
+      if (!travel) {
+        throw new NotFoundException('No recent travel found');
+      }
+
+      return travel;
     } catch (e) {
       if (e.status === 404) throw e;
       else
@@ -145,6 +211,52 @@ export class TravelRepository {
         );
 
       return !!document;
+    } catch (e) {
+      if (e.status === 404) throw e;
+      throw new InternalServerErrorException('updateTravel Database error', e);
+    }
+  }
+  async cancelTravel(
+    id: string,
+    user: Partial<User>,
+    data: { otherUser: string },
+  ): Promise<boolean> {
+    console.log('canceltravel', data, id);
+
+    const { otherUser } = data;
+    try {
+      const document = await this.travelDb.findById(id).exec();
+      if (!document)
+        throw new NotFoundException(
+          `Could not find Travel to update for id: ${id}`,
+        );
+
+      if (document.state !== TRAVELSTATE.TAKED)
+        throw new NotFoundException(`Travel id : ${id} is not taked`);
+
+      const { user: travelUser, driver: travelDriver } = document;
+      console.log(travelDriver, travelUser);
+
+      if (
+        (travelUser.toString() === user.id &&
+          travelDriver.toString() === otherUser) ||
+        (travelUser.toString() === otherUser &&
+          travelDriver.toString() === user.id)
+      ) {
+        document.state = TRAVELSTATE.CANCELLED;
+        await document.save();
+        await this.userDb.findOneAndUpdate(
+          {
+            _id: travelDriver,
+          },
+          { isInTravel: false },
+        );
+        return true;
+      } else {
+        throw new ForbiddenException(
+          'User does not have permission to cancel this travel',
+        );
+      }
     } catch (e) {
       if (e.status === 404) throw e;
       throw new InternalServerErrorException('updateTravel Database error', e);

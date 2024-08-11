@@ -91,16 +91,19 @@ export class TravelService {
     chofer: User,
   ): Promise<boolean> {
     return new Promise((resolve) => {
-      const clientId = chofer._id.toString();
-      const key = `${clientId}-${viaje._id.toString()}`;
-      console.log('Viaje propuesto a: ', clientId);
-      this.appGateway.emitToClient(clientId, 'propuesta-viaje', {
-        choferId: clientId,
-        viajeId: viaje._id,
+      const driver = chofer._id.toString();
+      const key = `${driver}-${viaje._id.toString()}`;
+      console.log('Viaje propuesto a: ', driver);
+      this.appGateway.emitToClient(driver, 'propuesta-viaje', {
+        driver: driver,
+        id: viaje._id,
         cost: viaje.cost,
         currency: viaje.currency,
         type: viaje.type,
-        createdAt: viaje.date,
+        state: viaje.state,
+        date: viaje.date,
+        status: viaje.status,
+        user: viaje.user,
         fromLocation: viaje.fromLocation,
         toLocation: viaje.toLocation,
       });
@@ -118,11 +121,11 @@ export class TravelService {
   }
 
   async handlePropuestaResponse(response: {
-    viajeId: string;
-    choferId: string;
+    id: string;
+    driver: string;
     accepted: boolean;
   }) {
-    const key = `${response.choferId}-${response.viajeId}`;
+    const key = `${response.driver}-${response.id}`;
     const resolve = this.pendingProposals.get(key);
 
     if (resolve) {
@@ -132,7 +135,7 @@ export class TravelService {
 
     if (response.accepted) {
       const viaje = await this.travelDb.findOne({
-        _id: response.viajeId,
+        _id: response.id,
         state: TRAVELSTATE.ORDER,
         $or: [{ driver: { $exists: false } }, { driver: null }],
       });
@@ -147,41 +150,41 @@ export class TravelService {
           {
             $set: {
               state: TRAVELSTATE.TAKED,
-              driver: response.choferId,
+              driver: response.driver,
             },
           },
         );
 
         if (result.modifiedCount > 0) {
           this.appGateway.emitToClient(viaje.user.toString(), 'viaje-tomado', {
-            choferId: response.choferId,
+            driver: response.driver,
           });
           this.appGateway.emitToClient(
-            response.choferId.toString(),
+            response.driver.toString(),
             'viaje-confirmado',
             { viaje },
           );
           await this.userDb.updateOne(
-            { _id: response.choferId },
+            { _id: response.driver },
             { isInTravel: true },
           );
           this.travelAcceptedAfterTime = true;
         } else {
           this.appGateway.emitToClient(
-            response.choferId.toString(),
+            response.driver.toString(),
             'viaje-no-confirmado',
             { message: 'El viaje ya fue tomado por otro chofer.' },
           );
         }
       } else {
         this.appGateway.emitToClient(
-          response.choferId.toString(),
+          response.driver.toString(),
           'viaje-no-confirmado',
           { message: 'El viaje no está disponible.' },
         );
       }
     } else {
-      this.appGateway.emitToClient(response.choferId, 'viaje-no-confirmado', {
+      this.appGateway.emitToClient(response.driver, 'viaje-no-confirmado', {
         message: 'El viaje no fue confirmado a tiempo.',
       });
     }

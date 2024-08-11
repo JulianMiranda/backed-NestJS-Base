@@ -28,6 +28,8 @@ import TravelSchema from './schemas/travel.schema';
 import { Travel } from './dto/travel.dto';
 import { User } from './dto/user.dto';
 import UserSchema from './schemas/user.schema';
+import { PriceModule } from './modules/price/price.module';
+import { PriceController } from './modules/price/price.controller';
 
 @Module({
   imports: [
@@ -46,6 +48,7 @@ import UserSchema from './schemas/user.schema';
     TravelModule,
     QueriesModule,
     CarModule,
+    PriceModule,
   ],
   controllers: [AppController],
   providers: [GeoUtils, TravelService],
@@ -64,6 +67,7 @@ export class AppModule implements NestModule {
         TravelController,
         QueriesController,
         CarsController,
+        PriceController,
       );
   }
 }

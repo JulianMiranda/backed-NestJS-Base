@@ -29,10 +29,37 @@ export class TravelController {
   getList(@Body() query: MongoQuery): any {
     return this.travelRepository.getList(query);
   }
+  @UseGuards(AuthenticationGuard)
+  @Post('/getListFastTravels')
+  @UsePipes(new TransformQuery())
+  getListFastTravels(@Body() query: MongoQuery): any {
+    return this.travelRepository.getList(query);
+  }
+  @UseGuards(AuthenticationGuard)
+  @Post('/getListScheduleTravels')
+  @UsePipes(new TransformQuery())
+  getListScheduleTravels(@Body() query: MongoQuery): any {
+    return this.travelRepository.getList(query);
+  }
+
+  @Put('/cancelTravel/:id')
+  cancelTravel(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Body() data: any,
+  ): Promise<boolean> {
+    return this.travelRepository.cancelTravel(id, { ...req.user }, data);
+  }
 
   @Get('/getOne/:id')
   getOne(@Param('id') id: string): Promise<Travel> {
     return this.travelRepository.getOne(id);
+  }
+
+  @UseGuards(AuthenticationGuard)
+  @Get('/getDriverTravel')
+  getDriverTravel(@Req() req: any): Promise<Travel> {
+    return this.travelRepository.getDriverTravel({ ...req.user });
   }
 
   @UseGuards(AuthenticationGuard)
