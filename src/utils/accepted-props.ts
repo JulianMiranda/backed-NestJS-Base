@@ -64,11 +64,24 @@ const checkTravelProps = (data: Partial<Travel>): Partial<Travel> => {
     'state',
     'driver',
     'cost',
-    'currency',
     'status',
     'type',
     'date',
+    'payment',
   ];
+  const { payment } = data;
+  if (
+    payment &&
+    payment.currency &&
+    !['MLC', 'USD', 'MN'].includes(payment.currency)
+  )
+    throw new BadRequestException(
+      '\\ payment currency \\ must be MLC, USD or MN',
+    );
+  if (payment && payment.type && !['cash', 'transfer'].includes(payment.type))
+    throw new BadRequestException(
+      '\\ payment type \\ must be cash or transfer',
+    );
 
   checkProps(props, Object.keys(data));
   return data;

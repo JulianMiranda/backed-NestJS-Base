@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import { TRAVELSTATE } from 'src/enums/travelstate.enum';
 import { schemaOptions } from '../utils/index';
 import { TRAVELTYPE } from 'src/enums/traveltype.enum';
+import { PAYMENTCURRENCY } from 'src/enums/payment.enum';
 
 const TravelSchema = new mongoose.Schema(
   {
@@ -15,6 +16,19 @@ const TravelSchema = new mongoose.Schema(
       ],
       index: true,
       default: TRAVELSTATE.ORDER,
+    },
+    payment: {
+      currency: {
+        type: String,
+        enum: ['MLC', 'MN', 'USD'],
+        required: true,
+        default: PAYMENTCURRENCY.MN,
+      },
+      type: {
+        type: String,
+        enum: ['cash', 'transfer'],
+        required: true,
+      },
     },
     type: {
       type: String,
@@ -39,8 +53,6 @@ const TravelSchema = new mongoose.Schema(
     },
 
     cost: { type: Number, set: setPrice, default: 0, index: true },
-
-    currency: { type: String, default: 'USD' },
     date: { type: Date, default: new Date() },
     status: { type: Boolean, default: true, index: true },
     fromLocation: {

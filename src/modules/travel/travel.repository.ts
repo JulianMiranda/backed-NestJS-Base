@@ -148,8 +148,11 @@ export class TravelRepository {
         type: 'Point',
         travelPoint: data.toCoordinates,
       };
+      console.log(data);
+
       const newTravel = new this.travelDb(data);
       const document = await newTravel.save();
+      console.log('document', document);
       const minDistance = 1;
       const maxDistance = 10000;
       this.travelService.proponerViajeOnetoOne(

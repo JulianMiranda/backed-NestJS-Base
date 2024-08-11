@@ -50,7 +50,27 @@ const checkMessageProps = (data: Partial<Message>): Partial<Message> => {
   return data;
 };
 const checkTravelProps = (data: Partial<Travel>): Partial<Travel> => {
-  const props = ['user', 'fromCoordinates', 'toCoordinates', 'cost', 'type'];
+  const props = [
+    'user',
+    'fromCoordinates',
+    'toCoordinates',
+    'cost',
+    'type',
+    'payment',
+  ];
+  const { payment } = data;
+  if (
+    payment &&
+    payment.currency &&
+    !['MLC', 'USD', 'MN'].includes(payment.currency)
+  )
+    throw new BadRequestException(
+      '\\ payment currency \\ must be MLC, USD or MN',
+    );
+  if (payment && payment.type && !['cash', 'transfer'].includes(payment.type))
+    throw new BadRequestException(
+      '\\ payment type \\ must be cash or transfer',
+    );
   const dataCopy = prepareProps(props, { ...data });
   checkNullOrUndefined(props, dataCopy);
   return data;

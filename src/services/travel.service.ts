@@ -98,7 +98,7 @@ export class TravelService {
         driver: driver,
         id: viaje._id,
         cost: viaje.cost,
-        currency: viaje.currency,
+        payment: viaje.payment,
         type: viaje.type,
         state: viaje.state,
         date: viaje.date,

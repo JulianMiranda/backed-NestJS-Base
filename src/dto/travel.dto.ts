@@ -8,6 +8,7 @@ import {
   IsString,
 } from 'class-validator';
 import { Document } from 'mongoose';
+import { PAYMENTCURRENCY, PAYMENTTYPE } from 'src/enums/payment.enum';
 import { TRAVELSTATE } from 'src/enums/travelstate.enum';
 import { TRAVELTYPE } from 'src/enums/traveltype.enum';
 
@@ -36,12 +37,23 @@ export class TravelLocation {
   travelPoint: TravelPoint;
 }
 
+export class TravelPayment {
+  @IsEnum(PAYMENTTYPE)
+  type: PAYMENTTYPE;
+
+  @IsEnum(PAYMENTCURRENCY)
+  currency: PAYMENTCURRENCY;
+}
+
 export class Travel extends Document {
   @IsEnum(TRAVELSTATE)
   state: TRAVELSTATE;
 
   @IsEnum(TRAVELTYPE)
   type: TRAVELTYPE;
+
+  @IsObject()
+  payment: TravelPayment;
 
   @IsDate()
   date: Date;
@@ -59,9 +71,6 @@ export class Travel extends Document {
 
   @IsNumber()
   cost: number;
-
-  @IsString()
-  currency: string;
 
   @IsObject()
   fromCoordinates: TravelPoint;
